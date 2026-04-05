@@ -41,6 +41,13 @@
   margin: 2px 0 10px;
 }
 
+.item-size {
+  font-size: 14px;
+  color: #666;
+  margin: 0 0 8px !important;
+  font-weight: 500;
+}
+
 .cart-info p {
   margin: 0 0 14px;
   font-size: 22px;

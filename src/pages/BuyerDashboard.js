@@ -1,6 +1,9 @@
 import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ProductContext } from "../context/ProductContext";
 import { CartContext } from "../context/CartContext";
+import { AuthContext } from "../context/AuthContext";
+import { WishlistContext } from "../context/WishlistContext";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
 import "./BuyerDashboard.css";
@@ -8,16 +11,84 @@ import "./BuyerDashboard.css";
 function BuyerDashboard() {
   const { products, setProducts } = useContext(ProductContext);
   const { addToCart } = useContext(CartContext);
+  const { user } = useContext(AuthContext);
+  const { isInWishlist, toggleWishlist } = useContext(WishlistContext);
+  const navigate = useNavigate();
   const { t } = useLanguage();
 
   const [reviewProductId, setReviewProductId] = useState(null);
   const [rating, setRating] = useState(5);
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState("top-rated");
+  const [quantities, setQuantities] = useState({});
+  const [activated, setActivated] = useState({});
 
   const [comment, setComment] = useState("");
   const [customProduct, setCustomProduct] = useState(null);
   const [customMsg, setCustomMsg] = useState("");
+  const [selectedSizes, setSelectedSizes] = useState({});
+
+  const sizes = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
+
+  // Get quantity for a product
+  const getQuantity = (productId) => quantities[productId] || 0;
+
+  // Check if product is activated
+  const isActivated = (productId) => activated[productId] || false;
+
+  // Activate and add first item to cart
+  const activateProduct = (productId, product) => {
+    const selectedSize = selectedSizes[productId];
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    setActivated((prev) => ({
+      ...prev,
+      [productId]: true,
+    }));
+    setQuantities((prev) => ({
+      ...prev,
+      [productId]: 1,
+    }));
+    addToCart(product, 1, selectedSize);
+    toast.success(t("buyer.addedToCart"));
+  };
+
+  // Handle increase quantity and add to cart
+  const handleIncreaseQty = (product) => {
+    const currentQty = getQuantity(product.id);
+    const newQty = currentQty + 1;
+    const selectedSize = selectedSizes[product.id];
+    addToCart(product, 1, selectedSize);
+    setQuantities((prev) => ({
+      ...prev,
+      [product.id]: newQty,
+    }));
+  };
+
+  // Handle decrease quantity and remove from cart
+  const handleDecreaseQty = (product) => {
+    const currentQty = getQuantity(product.id);
+    const newQty = currentQty - 1;
+    const selectedSize = selectedSizes[product.id];
+    if (newQty <= 0) {
+      setQuantities((prev) => ({
+        ...prev,
+        [product.id]: 0,
+      }));
+      setActivated((prev) => ({
+        ...prev,
+        [product.id]: false,
+      }));
+    } else {
+      addToCart(product, -1, selectedSize);
+      setQuantities((prev) => ({
+        ...prev,
+        [product.id]: newQty,
+      }));
+    }
+  };
 
   const formatPrice = (value) =>
     new Intl.NumberFormat("en-IN", {
@@ -57,7 +128,13 @@ function BuyerDashboard() {
     setProducts((prev) =>
       prev.map((p) => {
         if (p.id === reviewProductId) {
-          const newReviews = [...(p.reviews || []), { rating, comment }];
+          const newReview = {
+            rating,
+            comment,
+            reviewerName: user?.name || user?.email || "Anonymous",
+            reviewDate: new Date().toLocaleDateString()
+          };
+          const newReviews = [...(p.reviews || []), newReview];
 
           const avgRating =
             newReviews.reduce((sum, review) => sum + review.rating, 0) /
@@ -107,34 +184,99 @@ function BuyerDashboard() {
 
       <div className="product-grid">
         {displayProducts.map((product) => (
-          <div key={product.id} className="product-card">
-            <img src={product.image} alt={product.name} />
+          <div
+            key={product.id}
+            className="product-card"
+            onClick={() => navigate(`/product/${product.id}`)}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="product-image-container">
+              <img src={product.image} alt={product.name} />
+              <button
+                className={`heart-btn ${isInWishlist(product.id) ? "active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleWishlist(product);
+                  toast.success(
+                    isInWishlist(product.id)
+                      ? "Removed from wishlist"
+                      : "Added to wishlist"
+                  );
+                }}
+              >
+                ♥
+              </button>
+            </div>
 
-            <h3>{product.name}</h3>
+            <h3>{t(`products.${product.name}`, product.name)}</h3>
             <p className="price">{formatPrice(product.price)}</p>
 
             <p className="rating">⭐ {(product.rating || 4).toFixed(1)}</p>
 
-            <button
-              className="add-btn"
-              onClick={() => {
-                addToCart(product);
-                toast.success(t("buyer.addedToCart"));
-              }}
-            >
-              {t("buyer.addToCart")}
-            </button>
+            <div className="size-selector" onClick={(e) => e.stopPropagation()}>
+              {(product.sizes?.length ? product.sizes : sizes).map((size) => (
+                <button
+                  key={size}
+                  className={`size-btn ${selectedSizes[product.id] === size ? "active" : ""}`}
+                  onClick={() => setSelectedSizes((prev) => ({ ...prev, [product.id]: size }))}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+
+            <div onClick={(e) => e.stopPropagation()}>
+              {!isActivated(product.id) ? (
+                <button
+                  className="add-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    activateProduct(product.id, product);
+                  }}
+                >
+                  {t("buyer.addToCart")}
+                </button>
+              ) : (
+                <div className="qty-selector">
+                  <button
+                    className="qty-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDecreaseQty(product);
+                    }}
+                  >
+                    −
+                  </button>
+                  <span className="qty-display">{getQuantity(product.id)}</span>
+                  <button
+                    className="qty-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleIncreaseQty(product);
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+            </div>
 
             <button
               className="review-btn"
-              onClick={() => openReview(product.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                openReview(product.id);
+              }}
             >
               {t("buyer.writeReview")}
             </button>
 
             <button
               className="custom-btn"
-              onClick={() => requestCustomization(product)}
+              onClick={(e) => {
+                e.stopPropagation();
+                requestCustomization(product);
+              }}
             >
               {t("buyer.askCustomization")}
             </button>
@@ -182,7 +324,7 @@ function BuyerDashboard() {
       {customProduct && (
         <div className="review-modal">
           <div className="review-box">
-            <h3>{t("buyer.customTitle")} — {customProduct.name}</h3>
+            <h3>{t("buyer.customTitle")} — {t(`products.${customProduct.name}`, customProduct.name)}</h3>
 
             <textarea
               placeholder={t("buyer.customPlaceholder")}

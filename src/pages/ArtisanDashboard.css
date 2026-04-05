@@ -18,7 +18,7 @@
 
 .artisan-header-row p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-color);
 }
 
 .artisan-language {
@@ -29,10 +29,11 @@
 
 .artisan-language select {
   min-width: 120px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 8px 10px;
-  background: white;
+  background: var(--surface-soft);
+  color: var(--text-color);
 }
 
 .artisan-stats {
@@ -43,8 +44,8 @@
 }
 
 .artisan-stat-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.07);
@@ -52,13 +53,13 @@
 
 .artisan-stat-card h3 {
   margin: 0 0 6px;
-  color: #8b1e2d;
+  color: var(--text-color);
   font-size: 24px;
 }
 
 .artisan-stat-card p {
   margin: 0;
-  color: #64748b;
+  color: var(--text-color);
 }
 
 .artisan-value-positive {
@@ -77,8 +78,8 @@
 
 .artisan-form-card,
 .artisan-products-card {
-  background: white;
-  border: 1px solid #e2e8f0;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 14px;
   padding: 18px;
 }
@@ -96,9 +97,38 @@
 
 .artisan-form input,
 .artisan-form textarea {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 10px 12px;
+  background: var(--surface-soft);
+  color: var(--text-color);
+}
+
+.size-checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.size-option {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 0;
+  background: var(--surface-soft);
+  color: var(--text-color);
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.size-option.selected {
+  background: #8b1e2d;
+  color: white;
+  border-color: #8b1e2d;
+}
+
+.size-option:hover {
+  border-color: #8b1e2d;
 }
 
 .artisan-preview {
@@ -149,8 +179,9 @@
   grid-template-columns: 88px 1fr auto;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #f1f5f9;
+  border: 1px solid var(--border-color);
   border-radius: 10px;
+  background: var(--card-bg);
   align-items: start;
 }
 
@@ -167,7 +198,7 @@
 
 .artisan-product-info p {
   margin: 4px 0;
-  color: #334155;
+  color: var(--text-color);
 }
 
 .artisan-product-actions {
@@ -177,7 +208,7 @@
 }
 
 .artisan-empty {
-  color: #64748b;
+  color: var(--text-color);
   margin: 0;
 }
 

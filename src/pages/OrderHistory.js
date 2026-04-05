@@ -31,7 +31,7 @@ function OrderHistory() {
                 <div key={item.id} className="order-item">
                   <img src={item.image} alt={item.name} />
                   <span>
-                    {item.name} × {item.qty}
+                    {t(`products.${item.name}`, item.name)} × {item.qty}
                   </span>
                 </div>
               ))}

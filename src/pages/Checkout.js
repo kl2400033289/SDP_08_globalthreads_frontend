@@ -48,7 +48,7 @@ function Checkout() {
           <input
             type="text"
             name="name"
-            placeholder={t("checkout.fullName")}
+            placeholder={t("checkout.enterFullName")}
             value={form.name}
             onChange={handleChange}
           />
@@ -56,7 +56,7 @@ function Checkout() {
           <input
             type="text"
             name="address"
-            placeholder={t("checkout.address")}
+            placeholder={t("checkout.enterAddress")}
             value={form.address}
             onChange={handleChange}
           />
@@ -64,7 +64,7 @@ function Checkout() {
           <input
             type="tel"
             name="phone"
-            placeholder={t("checkout.phone")}
+            placeholder={t("checkout.enterPhone")}
             value={form.phone}
             onChange={handleChange}
           />

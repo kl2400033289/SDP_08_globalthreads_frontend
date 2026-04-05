@@ -24,26 +24,25 @@ function Cart() {
       ) : (
         <>
           {cart.map((item) => (
-            <div key={item.id} className="cart-item">
+            <div key={`${item.id}-${item.size}`} className="cart-item">
               <img src={item.image} alt={item.name} />
 
               <div className="cart-info">
-                <h3>{item.name}</h3>
-                <p>₹{item.price}</p>
-
+                <h3>{t(`products.${item.name}`, item.name)}</h3>
+                {item.size && <p className="item-size">{t("cart.sizeLabel")}: {item.size}</p>}
                 <div className="qty-controls">
-                  <button onClick={() => updateQty(item.id, -1)}>
+                  <button onClick={() => updateQty(item.id, item.size, -1)}>
                     −
                   </button>
                   <span>{item.qty}</span>
-                  <button onClick={() => updateQty(item.id, 1)}>
+                  <button onClick={() => updateQty(item.id, item.size, 1)}>
                     +
                   </button>
                 </div>
 
                 <button
                   className="remove-btn"
-                  onClick={() => removeFromCart(item.id)}
+                  onClick={() => removeFromCart(item.id, item.size)}
                 >
                   {t("cart.remove")}
                 </button>

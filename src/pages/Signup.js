@@ -55,18 +55,14 @@ function Signup() {
     // get existing users
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // check if already exists
-    const exists = users.find((u) => {
-      const normalizedUsername = u.username?.trim().toLowerCase();
+    // check if email already exists
+    const emailExists = users.find((u) => {
       const normalizedEmail = u.email?.trim().toLowerCase();
-      return (
-        normalizedUsername === form.username.trim().toLowerCase() ||
-        normalizedEmail === form.email.trim().toLowerCase()
-      );
+      return normalizedEmail === form.email.trim().toLowerCase();
     });
 
-    if (exists) {
-      setMessage({ text: t("signup.userExists"), type: "error" });
+    if (emailExists) {
+      setMessage({ text: t("signup.emailExists"), type: "error" });
       return;
     }
 

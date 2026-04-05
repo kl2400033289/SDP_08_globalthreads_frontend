@@ -44,14 +44,28 @@ export function AuthProvider({ children }) {
     const normalizedIdentifier = emailOrUsername.trim().toLowerCase();
 
     const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    const customUser = storedUsers.find(
+    
+    // Try to find by email first
+    let customUser = storedUsers.find(
       (entry) =>
-        entry.username.trim().toLowerCase() === normalizedIdentifier ||
-        (entry.email && entry.email.trim().toLowerCase() === normalizedIdentifier)
+        entry.email && entry.email.trim().toLowerCase() === normalizedIdentifier
     );
 
+    // If no email match, find all users with matching username
+    if (!customUser) {
+      const usernameMatches = storedUsers.filter(
+        (entry) =>
+          entry.username.trim().toLowerCase() === normalizedIdentifier
+      );
+      
+      // Try each username match to find one with correct password
+      customUser = usernameMatches.find(
+        (entry) => entry.password === password
+      );
+    }
+
     if (customUser && customUser.password === password) {
-      setUser({ role: customUser.role, username: customUser.username });
+      setUser({ role: customUser.role, username: customUser.username, email: customUser.email });
       return { success: true, role: customUser.role };
     }
 
