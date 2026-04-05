@@ -25,33 +25,47 @@ export function CartProvider({ children }) {
     }
   }, [user]);
 
-  // 🔹 add to cart
-  const addToCart = (product) => {
+  // 🔹 add to cart with optional quantity and size
+  const addToCart = (product, quantity = 1, size = "") => {
     setCart((prevCart) => {
-      const existing = prevCart.find((item) => item.id === product.id);
+      const existing = prevCart.find(
+        (item) => item.id === product.id && item.size === size
+      );
 
       if (existing) {
+        const newQty = existing.qty + quantity;
+        if (newQty <= 0) {
+          return prevCart.filter(
+            (item) => !(item.id === product.id && item.size === size)
+          );
+        }
         return prevCart.map((item) =>
-          item.id === product.id
-            ? { ...item, qty: item.qty + 1 }
+          item.id === product.id && item.size === size
+            ? { ...item, qty: newQty }
             : item
         );
       }
 
-      return [...prevCart, { ...product, qty: 1 }];
+      if (quantity <= 0) {
+        return prevCart;
+      }
+
+      return [...prevCart, { ...product, qty: quantity, size }];
     });
   };
 
-  // 🔹 remove item
-  const removeFromCart = (id) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  // 🔹 remove item by product id + size
+  const removeFromCart = (id, size = "") => {
+    setCart((prevCart) =>
+      prevCart.filter((item) => !(item.id === id && item.size === size))
+    );
   };
 
-  // 🔹 change quantity
-  const updateQty = (id, delta) => {
+  // 🔹 change quantity for product id + size
+  const updateQty = (id, size = "", delta) => {
     setCart((prevCart) =>
       prevCart.map((item) =>
-        item.id === id
+        item.id === id && item.size === size
           ? { ...item, qty: Math.max(1, item.qty + delta) }
           : item
       )

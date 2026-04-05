@@ -7,12 +7,14 @@ import "./ArtisanDashboard.css";
 
 const defaultImage = "https://via.placeholder.com/300x300?text=Product";
 
+const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
+
 const emptyForm = {
   name: "",
   price: "",
-  costPrice: "",
-  stock: "",
-  designNotes: "",
+  sizes: [],
+  productStory: "",
+  description: "",
   image: "",
 };
 
@@ -95,6 +97,18 @@ function ArtisanDashboard() {
     }));
   };
 
+  const handleSizeToggle = (size) => {
+    setForm((prev) => {
+      const hasSize = prev.sizes.includes(size);
+      return {
+        ...prev,
+        sizes: hasSize
+          ? prev.sizes.filter((item) => item !== size)
+          : [...prev.sizes, size],
+      };
+    });
+  };
+
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -119,7 +133,7 @@ function ArtisanDashboard() {
   const handleSaveProduct = (e) => {
     e.preventDefault();
 
-    if (!form.name.trim() || !form.price || !form.stock) {
+    if (!form.name.trim() || !form.price) {
       return;
     }
 
@@ -131,9 +145,9 @@ function ArtisanDashboard() {
                 ...product,
                 name: form.name.trim(),
                 price: Number(form.price) || 0,
-                costPrice: Number(form.costPrice) || 0,
-                stock: Math.max(0, Number(form.stock) || 0),
-                designNotes: form.designNotes.trim(),
+                sizes: form.sizes,
+                productStory: form.productStory.trim(),
+                description: form.description.trim(),
                 image: form.image || product.image,
               }
             : product
@@ -148,9 +162,9 @@ function ArtisanDashboard() {
       id: Date.now(),
       name: form.name.trim(),
       price: Number(form.price) || 0,
-      costPrice: Number(form.costPrice) || 0,
-      stock: Math.max(0, Number(form.stock) || 0),
-      designNotes: form.designNotes.trim(),
+      sizes: form.sizes,
+      productStory: form.productStory.trim(),
+      description: form.description.trim(),
       image: form.image || defaultImage,
       rating: 0,
       reviews: [],
@@ -166,9 +180,9 @@ function ArtisanDashboard() {
     setForm({
       name: product.name || "",
       price: String(product.price ?? ""),
-      costPrice: String(product.costPrice ?? ""),
-      stock: String(product.stock ?? 0),
-      designNotes: product.designNotes || "",
+      sizes: product.sizes || [],
+      productStory: product.productStory || "",
+      description: product.description || "",
       image: product.image || "",
     });
   };
@@ -184,8 +198,8 @@ function ArtisanDashboard() {
     <div className="artisan-page">
       <div className="artisan-header-row">
         <div>
-          <h1>{t.artisanTitle}</h1>
-          <p>{t.artisanSubtitle}</p>
+          <h1>{t("artisanTitle", "Artisan Dashboard")}</h1>
+          <p>{t("artisanSubtitle", "Upload products, update price and stock, and view your sales performance.")}</p>
         </div>
 
         <div className="artisan-language">
@@ -207,19 +221,19 @@ function ArtisanDashboard() {
       <div className="artisan-stats">
         <div className="artisan-stat-card">
           <h3>{artisanProducts.length}</h3>
-          <p>{t.productsCount}</p>
+          <p>{t("productsCount", "Products")}</p>
         </div>
         <div className="artisan-stat-card">
           <h3>{analytics.soldUnits}</h3>
-          <p>{t.soldUnits}</p>
+          <p>{t("soldUnits", "Sold Units")}</p>
         </div>
         <div className="artisan-stat-card">
           <h3>{analytics.customersCount}</h3>
-          <p>{t.customersCount}</p>
+          <p>{t("customersCount", "Customers")}</p>
         </div>
         <div className="artisan-stat-card">
           <h3>{formatMoney(analytics.revenue)}</h3>
-          <p>{t.revenue}</p>
+          <p>{t("revenue", "Revenue")}</p>
         </div>
         <div className="artisan-stat-card">
           <h3
@@ -231,16 +245,16 @@ function ArtisanDashboard() {
           >
             {formatMoney(analytics.profitLoss)}
           </h3>
-          <p>{t.profitLoss}</p>
+          <p>{t("profitLoss", "Profit / Loss")}</p>
         </div>
       </div>
 
       <div className="artisan-grid">
         <div className="artisan-form-card">
-          <h2>{t.uploadProduct}</h2>
+          <h2>{t("uploadProduct", "Upload Product")}</h2>
 
           <form className="artisan-form" onSubmit={handleSaveProduct}>
-            <label htmlFor="name">{t.productName}</label>
+            <label htmlFor="name">{t("productName", "Product Name")}</label>
             <input
               id="name"
               name="name"
@@ -250,7 +264,7 @@ function ArtisanDashboard() {
               required
             />
 
-            <label htmlFor="price">{t.productPrice}</label>
+            <label htmlFor="price">{t("productPrice", "Product Cost")}</label>
             <input
               id="price"
               name="price"
@@ -261,37 +275,39 @@ function ArtisanDashboard() {
               required
             />
 
-            <label htmlFor="costPrice">{t.productCost}</label>
-            <input
-              id="costPrice"
-              name="costPrice"
-              type="number"
-              min="0"
-              value={form.costPrice}
-              onChange={handleFieldChange}
-            />
+            <label>{t("productSizes", "Product Sizes")}</label>
+            <div className="size-checkbox-grid">
+              {sizeOptions.map((size) => (
+                <button
+                  key={size}
+                  type="button"
+                  className={`size-option ${form.sizes.includes(size) ? "selected" : ""}`}
+                  onClick={() => handleSizeToggle(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
 
-            <label htmlFor="stock">{t.productStock}</label>
-            <input
-              id="stock"
-              name="stock"
-              type="number"
-              min="0"
-              value={form.stock}
-              onChange={handleFieldChange}
-              required
-            />
-
-            <label htmlFor="designNotes">{t.productDesign}</label>
+            <label htmlFor="productStory">{t("productStory", "Story")}</label>
             <textarea
-              id="designNotes"
-              name="designNotes"
+              id="productStory"
+              name="productStory"
               rows="3"
-              value={form.designNotes}
+              value={form.productStory}
               onChange={handleFieldChange}
             />
 
-            <label htmlFor="image">{t.productImage}</label>
+            <label htmlFor="description">{t("productDescription", "Product Description")}</label>
+            <textarea
+              id="description"
+              name="description"
+              rows="5"
+              value={form.description}
+              onChange={handleFieldChange}
+            />
+
+            <label htmlFor="image">{t("productImage", "Upload Product Image")}</label>
             <input
               id="image"
               name="image"
@@ -306,7 +322,7 @@ function ArtisanDashboard() {
 
             <div className="artisan-form-actions">
               <button type="submit" className="artisan-primary-btn">
-                {editingId ? t.update : t.saveProduct}
+                {editingId ? t("update", "Update") : t("addProduct", "Add Product")}
               </button>
               {editingId && (
                 <button
@@ -314,7 +330,7 @@ function ArtisanDashboard() {
                   className="artisan-secondary-btn"
                   onClick={resetForm}
                 >
-                  {t.cancel}
+                  {t("common.cancel", "Cancel")}
                 </button>
               )}
             </div>
@@ -322,10 +338,10 @@ function ArtisanDashboard() {
         </div>
 
         <div className="artisan-products-card">
-          <h2>{t.yourProducts}</h2>
+          <h2>{t("yourProducts", "Your Products")}</h2>
 
           {artisanProducts.length === 0 ? (
-            <p className="artisan-empty">{t.noProducts}</p>
+            <p className="artisan-empty">{t("noProducts", "No products yet. Add your first product.")}</p>
           ) : (
             <div className="artisan-product-list">
               {artisanProducts.map((product) => (
@@ -339,20 +355,31 @@ function ArtisanDashboard() {
                   />
 
                   <div className="artisan-product-info">
-                    <h3>{product.name}</h3>
+                    <h3>{t(`products.${product.name}`, product.name)}</h3>
                     <p>
-                      {t.productPrice}: {formatMoney(product.price)}
+                      {t("productPrice", "Product Cost")} : {formatMoney(product.price)}
                     </p>
                     <p>
-                      {t.productStock}: {Number(product.stock) || 0}
+                      {t("productStock", "Stock")} : {Number(product.stock) || 0}
                     </p>
+                    {product.sizes?.length > 0 && (
+                      <p>
+                        {t("sizesLabel", "Sizes")} : {product.sizes.join(", ")}
+                      </p>
+                    )}
+                    {product.productStory && (
+                      <p className="artisan-product-story">
+                        {t("storyLabel", "Story")}: {product.productStory}
+                      </p>
+                    )}
+                    {product.description && (
+                      <p className="artisan-product-description">
+                        {product.description}
+                      </p>
+                    )}
                     <p>
-                      {t.productCost}: {formatMoney(product.costPrice || 0)}
+                      {t("soldByProduct", "Units Sold")} : {analytics.soldByProduct[product.id] || 0}
                     </p>
-                    <p>
-                      {t.soldByProduct}: {analytics.soldByProduct[product.id] || 0}
-                    </p>
-                    {product.designNotes && <p>{product.designNotes}</p>}
                   </div>
 
                   <div className="artisan-product-actions">
@@ -361,14 +388,14 @@ function ArtisanDashboard() {
                       type="button"
                       onClick={() => handleEditProduct(product)}
                     >
-                      {t.edit}
+                      {t("common.edit", "Edit")}
                     </button>
                     <button
                       className="artisan-danger-btn"
                       type="button"
                       onClick={() => handleDeleteProduct(product.id)}
                     >
-                      {t.delete}
+                      {t("common.delete", "Delete")}
                     </button>
                   </div>
                 </div>

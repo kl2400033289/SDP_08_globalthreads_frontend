@@ -11,6 +11,7 @@ import { OrderProvider } from "./context/OrderContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ArtisanProvider } from "./context/ArtisanContext";
 import { UserProvider } from "./context/UserContext";
+import { WishlistProvider } from "./context/WishlistContext";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
@@ -20,15 +21,17 @@ root.render(
         <UserProvider>
           <ArtisanProvider>
             <CartProvider>
-              <ProductProvider>
-                <OrderProvider>
-                  <App />
-                </OrderProvider>
-              </ProductProvider>
+              <WishlistProvider>
+                <ProductProvider>
+                  <OrderProvider>
+                    <App />
+                  </OrderProvider>
+                </ProductProvider>
+              </WishlistProvider>
             </CartProvider>
           </ArtisanProvider>
         </UserProvider>
       </AuthProvider>
     </ThemeProvider>
   </LanguageProvider>
-);  
+);
