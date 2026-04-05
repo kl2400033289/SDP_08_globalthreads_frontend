@@ -316,3 +316,107 @@
     grid-template-columns: 1fr;
   }
 }
+/* 🌙 DARK MODE OVERRIDES */
+
+[data-theme="dark"] .admin-layout {
+  background: #121212;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .sidebar {
+  background: #1e1e1e;
+  border-right: 1px solid #333;
+}
+
+[data-theme="dark"] .sidebar-menu li {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .sidebar-menu li.active {
+  background: #ff4d6d;
+  color: white;
+}
+
+[data-theme="dark"] .admin-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .admin-form-card,
+[data-theme="dark"] .admin-table,
+[data-theme="dark"] .user-card,
+[data-theme="dark"] .dispute-card {
+  background: #1e1e1e;
+  color: #f1f5f9;
+  border-color: #333;
+}
+
+[data-theme="dark"] .admin-form input,
+[data-theme="dark"] .admin-select {
+  background: #2a2a2a;
+  color: #f1f5f9;
+  border: 1px solid #444;
+}
+
+[data-theme="dark"] .admin-table td {
+  color: #e2e8f0;
+  border-bottom: 1px solid #333;
+}
+
+[data-theme="dark"] .empty-text,
+[data-theme="dark"] .security-row p,
+[data-theme="dark"] .stat-card p {
+  color: #94a3b8;
+}
+/* 🌙 DARK MODE OVERRIDES */
+
+[data-theme="dark"] .admin-layout {
+  background: #121212;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .sidebar {
+  background: #1e1e1e;
+  border-right: 1px solid #333;
+}
+
+[data-theme="dark"] .sidebar-menu li {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .sidebar-menu li.active {
+  background: #ff4d6d;
+  color: white;
+}
+
+[data-theme="dark"] .admin-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .admin-form-card,
+[data-theme="dark"] .admin-table,
+[data-theme="dark"] .user-card,
+[data-theme="dark"] .dispute-card {
+  background: #1e1e1e;
+  color: #f1f5f9;
+  border-color: #333;
+}
+
+[data-theme="dark"] .admin-form input,
+[data-theme="dark"] .admin-select {
+  background: #2a2a2a;
+  color: #f1f5f9;
+  border: 1px solid #444;
+}
+
+[data-theme="dark"] .admin-table td {
+  color: #e2e8f0;
+  border-bottom: 1px solid #333;
+}
+
+[data-theme="dark"] .empty-text,
+[data-theme="dark"] .security-row p,
+[data-theme="dark"] .stat-card p {
+  color: #94a3b8;
+}

@@ -172,7 +172,7 @@ function AdminDashboard() {
   };
 
   return (
-    <div className="admin-layout admin-light">
+<div className="admin-layout">
       <aside className="sidebar">
         <h2 className="sidebar-logo">🌍 {t("admin.sidebarTitle")}</h2>
 
@@ -228,7 +228,7 @@ function AdminDashboard() {
       <main className="admin-main">
         {activeTab === "dashboard" && (
           <>
-            <h1 className="admin-title">Admin Dashboard</h1>
+            <h1 className="admin-title">{t("admin.dashboardTitle")}</h1>
 
             <div className="admin-stats">
               <div className="stat-card">
@@ -303,7 +303,7 @@ function AdminDashboard() {
                 <tbody>
                   {products.map((product) => (
                     <tr key={product.id}>
-                      <td>{product.name}</td>
+                      <td>{t(`products.${product.name}`, product.name)}</td>
                       <td>₹{product.price}</td>
                       <td>
                         <button className="delete-btn" onClick={() => deleteProduct(product.id)}>
@@ -324,7 +324,7 @@ function AdminDashboard() {
 
             <div className="accounts-columns">
               <section className="admin-table">
-                <h2>Artisan Accounts ({artisans.length})</h2>
+                <h2>{t("admin.artisanAccountsTitle")} ({artisans.length})</h2>
                 {artisans.length === 0 ? (
                   <p className="empty-text">{t("admin.noArtisans")}</p>
                 ) : (
@@ -333,7 +333,7 @@ function AdminDashboard() {
                       <div key={account.id} className="user-card">
                         <h3>👤 {account.username}</h3>
                         <p>
-                          <strong>{t("admin.role")}:</strong> artisan
+                          <strong>{t("admin.role")}:</strong> {t("admin.artisanRole")}
                         </p>
                         <p>
                           <strong>{t("admin.status")}:</strong> {account.blocked ? `🚫 ${t("admin.blocked")}` : `✅ ${t("admin.active")}`}
@@ -353,7 +353,7 @@ function AdminDashboard() {
               </section>
 
               <section className="admin-table">
-                <h2>Buyer Accounts ({buyers.length})</h2>
+                <h2>{t("admin.buyerAccountsTitle")} ({buyers.length})</h2>
                 {buyers.length === 0 ? (
                   <p className="empty-text">{t("admin.noBuyers")}</p>
                 ) : (
@@ -362,7 +362,7 @@ function AdminDashboard() {
                       <div key={account.id} className="user-card">
                         <h3>👤 {account.username}</h3>
                         <p>
-                          <strong>{t("admin.role")}:</strong> buyer
+                          <strong>{t("admin.role")}:</strong> {t("admin.buyerRole")}
                         </p>
                         <p>
                           <strong>{t("admin.status")}:</strong> {account.blocked ? `🚫 ${t("admin.blocked")}` : `✅ ${t("admin.active")}`}

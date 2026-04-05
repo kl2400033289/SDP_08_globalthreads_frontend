@@ -13,6 +13,7 @@ function ForgotPassword() {
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [message, setMessage] = useState("");
   const [strength, setStrength] = useState("");
 
@@ -36,6 +37,8 @@ function ForgotPassword() {
       setMessage(t("forgot.usernameNotFound"));
       return;
     }
+
+    setOldPassword(userExists.password);
 
     // generate OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
@@ -74,6 +77,11 @@ function ForgotPassword() {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       setMessage(t("signup.passwordMismatch"));
+      return;
+    }
+
+    if (newPassword === oldPassword) {
+      setMessage(t("forgot.newPasswordSameAsOld"));
       return;
     }
 

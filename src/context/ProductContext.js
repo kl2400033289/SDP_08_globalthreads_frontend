@@ -18,6 +18,7 @@ const defaultProducts = [
     rating: 4.5,
     reviews: [],
     artisan: "artisan",
+    certificate: "https://via.placeholder.com/600x300?text=Govt+Authenticity+Certificate"
   },
   {
     id: 2,

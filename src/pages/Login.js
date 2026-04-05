@@ -118,7 +118,13 @@ function Login() {
         </p>
 
         <p className="switch-auth-text auth-link-secondary">
-          <span onClick={() => navigate("/forgot-password")}>{t("login.forgotPassword")}</span>
+          <span onClick={() => {
+            if (!form.email.trim()) {
+              setError(t("login.enterEmailOrUsernameFirst"));
+            } else {
+              navigate("/forgot-password");
+            }
+          }}>{t("login.forgotPassword")}</span>
         </p>
 
         <div className="demo-panel">

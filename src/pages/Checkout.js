@@ -81,7 +81,7 @@ function Checkout() {
           {cart.map((item) => (
             <div key={item.id} className="summary-item">
               <span>
-                {item.name} × {item.qty}
+                {t(`products.${item.name}`, item.name)} × {item.qty}
               </span>
               <span>₹{item.price * item.qty}</span>
             </div>

@@ -144,9 +144,10 @@ function MarketingDashboard() {
     }).format(value || 0);
 
   const buildShareText = (product, platform) => {
-    const base = `✨ ${product.name} now on Global Threads at ₹${product.price}. Handcrafted quality, limited stock!`;
-    const cta = "Shop now: https://globalthreads.com/shop";
-    const hashtags = "#GlobalThreads #Handloom #SustainableFashion";
+    const translatedName = t(`products.${product.name}`, product.name);
+    const base = t("marketing.shareTextBase").replace("{productName}", translatedName).replace("{price}", product.price);
+    const cta = t("marketing.shareTextCTA");
+    const hashtags = t("marketing.shareTextHashtags");
 
     if (platform === "whatsapp") {
       return `${base}\n${cta}\n${hashtags}`;
@@ -164,7 +165,7 @@ function MarketingDashboard() {
 
     if (navigator.share) {
       await navigator.share({
-        title: product.name,
+        title: t(`products.${product.name}`, product.name),
         text,
         url: "https://globalthreads.com/shop",
       });
@@ -193,12 +194,12 @@ function MarketingDashboard() {
                   e.target.src = "https://via.placeholder.com/300x300?text=Product";
                 }}
               />
-              <h3>{product.name}</h3>
+              <h3>{t(`products.${product.name}`, product.name)}</h3>
               <p>{formatMoney(product.price)}</p>
               <div className="marketing-share-actions">
-                <button onClick={() => shareProduct(product, "whatsapp")}>WhatsApp</button>
-                <button onClick={() => shareProduct(product, "instagram")}>Instagram</button>
-                <button onClick={() => shareProduct(product, "facebook")}>Facebook</button>
+                <button onClick={() => shareProduct(product, "whatsapp")}>{t("marketing.whatsapp")}</button>
+                <button onClick={() => shareProduct(product, "instagram")}>{t("marketing.instagram")}</button>
+                <button onClick={() => shareProduct(product, "facebook")}>{t("marketing.facebook")}</button>
               </div>
             </div>
           ))}
@@ -263,7 +264,7 @@ function MarketingDashboard() {
             <p>{t("marketing.itemsSold")}</p>
           </div>
           <div className="marketing-stat-card">
-            <h3>{demandStats.trendingProduct?.name || t("marketing.na")}</h3>
+            <h3>{t(`products.${demandStats.trendingProduct?.name}`, demandStats.trendingProduct?.name) || t("marketing.na")}</h3>
             <p>{t("marketing.trendingProduct")}</p>
           </div>
         </div>
@@ -275,7 +276,7 @@ function MarketingDashboard() {
           ) : (
             demandStats.rankedProducts.map((product) => (
               <div key={product.id} className="marketing-list-row">
-                <span>{product.name}</span>
+                <span>{t(`products.${product.name}`, product.name)}</span>
                 <strong>
                   {product.qty} {t("marketing.soldSuffix")} • {product.demand} {t("marketing.demandSuffix")}
                 </strong>
