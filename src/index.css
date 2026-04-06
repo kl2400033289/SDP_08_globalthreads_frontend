@@ -29,19 +29,20 @@
 * {
   box-sizing: border-box;
 }
-
 body {
   margin: 0;
   font-family: "Segoe UI", "Noto Sans", system-ui, -apple-system, sans-serif;
-  background: radial-gradient(circle at top right, rgba(200, 155, 60, 0.16), transparent 40%),
-    radial-gradient(circle at bottom left, rgba(127, 23, 37, 0.16), transparent 45%),
-    var(--bg-color);
-  color: var(--text-color);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background 0.25s ease, color 0.25s ease;
-}
 
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23c89b3c' stroke-opacity='0.08'%3E%3Ccircle cx='100' cy='100' r='80'/%3E%3Ccircle cx='100' cy='100' r='60'/%3E%3Ccircle cx='100' cy='100' r='40'/%3E%3Cpath d='M100 20 Q120 40 100 60 Q80 40 100 20Z'/%3E%3Cpath d='M180 100 Q160 120 140 100 Q160 80 180 100Z'/%3E%3Cpath d='M100 180 Q80 160 100 140 Q120 160 100 180Z'/%3E%3Cpath d='M20 100 Q40 80 60 100 Q40 120 20 100Z'/%3E%3C/g%3E%3C/svg%3E") repeat,
+
+    radial-gradient(circle at top right, rgba(200, 155, 60, 0.16), transparent 40%),
+    radial-gradient(circle at bottom left, rgba(127, 23, 37, 0.16), transparent 45%),
+
+    var(--bg-color);
+
+  background-size: 500px, auto, auto, auto;
+}
 a {
   color: inherit;
 }
