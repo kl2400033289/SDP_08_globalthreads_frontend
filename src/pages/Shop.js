@@ -47,7 +47,7 @@ function Shop() {
     const selectedSize = selectedSizes[productKey];
     
     if (!selectedSize) {
-      toast.error("Please select a size");
+      toast.error(t("productDetail.selectSizeError"));
       return;
     }
     

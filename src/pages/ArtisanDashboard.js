@@ -1,17 +1,40 @@
-import { useContext, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { ProductContext } from "../context/ProductContext";
 import { OrderContext } from "../context/OrderContext";
 import { AuthContext } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { loadCustomizationRequests, STORAGE_KEY } from "../utils/customizationRequests";
 import "./ArtisanDashboard.css";
 
 const defaultImage = "https://via.placeholder.com/300x300?text=Product";
 
 const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
 
+const trackingSteps = [
+  "placed",
+  "confirmed",
+  "processing",
+  "shipped",
+  "out_for_delivery",
+  "delivered",
+];
+
+const getStepDate = (order, step) => {
+  const entry = [...(order.trackingTimeline || [])]
+    .reverse()
+    .find((item) => item.status === step);
+
+  if (!entry?.at) {
+    return "";
+  }
+
+  return entry.at.split(",")[0];
+};
+
 const emptyForm = {
   name: "",
   price: "",
+  stock: "",
   sizes: [],
   productStory: "",
   description: "",
@@ -20,12 +43,22 @@ const emptyForm = {
 
 function ArtisanDashboard() {
   const { products, setProducts } = useContext(ProductContext);
-  const { orders } = useContext(OrderContext);
+  const { orders, updateOrderTracking } = useContext(OrderContext);
   const { user } = useContext(AuthContext);
   const { lang, setLang, t, languages } = useLanguage();
 
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
+  const [customRequests, setCustomRequests] = useState(() => loadCustomizationRequests());
+
+  const trackingLabel = {
+    placed: t("tracking.placed", "Order Placed"),
+    confirmed: t("tracking.confirmed", "Confirmed"),
+    processing: t("tracking.processing", "Processing"),
+    shipped: t("tracking.shipped", "Shipped"),
+    out_for_delivery: t("tracking.outForDelivery", "Out for Delivery"),
+    delivered: t("tracking.delivered", "Delivered"),
+  };
 
   const currentArtisan = user?.username?.trim().toLowerCase();
 
@@ -38,6 +71,42 @@ function ArtisanDashboard() {
       ),
     [products, currentArtisan]
   );
+
+  const artisanRequests = useMemo(
+    () =>
+      customRequests.filter(
+        (request) =>
+          (request.artisan || "artisan").trim().toLowerCase() === currentArtisan
+      ),
+    [customRequests, currentArtisan]
+  );
+
+  const artisanOrderEntries = useMemo(() => {
+    const artisanProductIds = new Set(artisanProducts.map((product) => product.id));
+
+    return orders
+      .map((order) => {
+        const artisanItems = order.items.filter((item) => artisanProductIds.has(item.id));
+        return {
+          ...order,
+          artisanItems,
+        };
+      })
+      .filter((order) => order.artisanItems.length > 0);
+  }, [orders, artisanProducts]);
+
+  useEffect(() => {
+    const syncRequests = () => setCustomRequests(loadCustomizationRequests());
+
+    const handleStorage = (event) => {
+      if (event.key === STORAGE_KEY) {
+        syncRequests();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const analytics = useMemo(() => {
     const artisanIds = new Set(artisanProducts.map((product) => product.id));
@@ -145,6 +214,7 @@ function ArtisanDashboard() {
                 ...product,
                 name: form.name.trim(),
                 price: Number(form.price) || 0,
+                stock: Number(form.stock) || 0,
                 sizes: form.sizes,
                 productStory: form.productStory.trim(),
                 description: form.description.trim(),
@@ -162,6 +232,7 @@ function ArtisanDashboard() {
       id: Date.now(),
       name: form.name.trim(),
       price: Number(form.price) || 0,
+      stock: Number(form.stock) || 0,
       sizes: form.sizes,
       productStory: form.productStory.trim(),
       description: form.description.trim(),
@@ -180,6 +251,7 @@ function ArtisanDashboard() {
     setForm({
       name: product.name || "",
       price: String(product.price ?? ""),
+      stock: String(product.stock ?? ""),
       sizes: product.sizes || [],
       productStory: product.productStory || "",
       description: product.description || "",
@@ -192,6 +264,10 @@ function ArtisanDashboard() {
     if (editingId === id) {
       resetForm();
     }
+  };
+
+  const handleTrackingChange = (orderId, status) => {
+    updateOrderTracking(orderId, status, user?.username || "artisan");
   };
 
   return (
@@ -271,6 +347,17 @@ function ArtisanDashboard() {
               type="number"
               min="0"
               value={form.price}
+              onChange={handleFieldChange}
+              required
+            />
+
+            <label htmlFor="stock">{t("productStock", "Stock")}</label>
+            <input
+              id="stock"
+              name="stock"
+              type="number"
+              min="0"
+              value={form.stock}
               onChange={handleFieldChange}
               required
             />
@@ -402,6 +489,105 @@ function ArtisanDashboard() {
               ))}
             </div>
           )}
+
+          <div className="artisan-request-section">
+            <h3>{t("customizationRequests", "Customization Requests")}</h3>
+
+            {artisanRequests.length === 0 ? (
+              <p className="artisan-empty">
+                {t("noCustomizationRequests", "No customization requests yet.")}
+              </p>
+            ) : (
+              <div className="artisan-request-list">
+                {artisanRequests.map((request) => (
+                  <div key={request.id} className="artisan-request-item">
+                    <div>
+                      <h4>{request.productName}</h4>
+                      <p>
+                        <strong>{t("buyer.customer", "Customer")}</strong>: {request.buyer}
+                      </p>
+                      <p>
+                        <strong>{t("common.message", "Message")}</strong>: {request.message}
+                      </p>
+                    </div>
+
+                    <div className="artisan-request-meta">
+                      <span>{request.createdAt}</span>
+                      <span className="artisan-request-badge">{request.status}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="artisan-request-section">
+            <h3>{t("artisan.trackOrders", "Track Orders")}</h3>
+
+            {artisanOrderEntries.length === 0 ? (
+              <p className="artisan-empty">{t("artisan.noOrdersToTrack", "No orders to track yet.")}</p>
+            ) : (
+              <div className="artisan-order-list">
+                {artisanOrderEntries.map((order) => (
+                  <div key={order.id} className="artisan-order-item">
+                    <div>
+                      <h4>
+                        {t("orders.order", "Order")} #{order.id}
+                      </h4>
+                      <p>
+                        <strong>{t("admin.customer", "Customer")}</strong>: {order.username}
+                      </p>
+                      <p>
+                        <strong>{t("orders.total", "Total")}</strong>: ₹{order.total}
+                      </p>
+                      <p>
+                        <strong>{t("artisan.itemsFulfilling", "Items you are fulfilling")}:</strong> {order.artisanItems.map((item) => item.name).join(", ")}
+                      </p>
+                    </div>
+
+                    <div className="artisan-order-controls">
+                      <label htmlFor={`status-${order.id}`}>{t("admin.statusLabel", "Status")}</label>
+                      <select
+                        id={`status-${order.id}`}
+                        value={order.trackingStatus || "placed"}
+                        onChange={(e) => handleTrackingChange(order.id, e.target.value)}
+                      >
+                        <option value="placed">{t("tracking.placed", "Order Placed")}</option>
+                        <option value="confirmed">{t("tracking.confirmed", "Confirmed")}</option>
+                        <option value="processing">{t("tracking.processing", "Processing")}</option>
+                        <option value="shipped">{t("tracking.shipped", "Shipped")}</option>
+                        <option value="out_for_delivery">{t("tracking.outForDelivery", "Out for Delivery")}</option>
+                        <option value="delivered">{t("tracking.delivered", "Delivered")}</option>
+                      </select>
+                      <span className="artisan-request-badge">
+                        {trackingLabel[order.trackingStatus || "placed"]}
+                      </span>
+                    </div>
+
+                    <div className="artisan-tracking-steps">
+                      {trackingSteps.map((step) => {
+                        const activeIndex = trackingSteps.indexOf(order.trackingStatus || "placed");
+                        const stepIndex = trackingSteps.indexOf(step);
+                        const isDone = stepIndex < activeIndex;
+                        const isCurrent = stepIndex === activeIndex;
+
+                        return (
+                          <div
+                            key={`${order.id}-${step}`}
+                            className={`artisan-tracking-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`}
+                          >
+                            <span className="artisan-tracking-dot" />
+                            <span className="artisan-tracking-label">{trackingLabel[step]}</span>
+                            <span className="artisan-tracking-date">{getStepDate(order, step) || "-"}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

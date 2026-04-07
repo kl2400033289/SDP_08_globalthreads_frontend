@@ -6,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
+import { saveCustomizationRequest } from "../utils/customizationRequests";
 import "./BuyerDashboard.css";
 
 function BuyerDashboard() {
@@ -340,6 +341,11 @@ function BuyerDashboard() {
                   return;
                 }
 
+                saveCustomizationRequest({
+                  product: customProduct,
+                  message: customMsg,
+                  buyer: user,
+                });
                 toast.success(t("buyer.customSent"));
                 setCustomProduct(null);
                 setCustomMsg("");

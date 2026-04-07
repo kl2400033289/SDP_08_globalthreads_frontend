@@ -228,7 +228,7 @@ function AdminDashboard() {
       <main className="admin-main">
         {activeTab === "dashboard" && (
           <>
-            <h1 className="admin-title">Admin Dashboard</h1>
+            <h1 className="admin-title">{t("admin.dashboardTitle", "Admin Dashboard")}</h1>
 
             <div className="admin-stats">
               <div className="stat-card">
@@ -299,21 +299,33 @@ function AdminDashboard() {
             <div className="admin-table">
               <h2>{t("admin.allProducts")}</h2>
 
-              <table>
-                <tbody>
+              {products.length === 0 ? (
+                <p className="empty-text">{t("admin.noProducts", "No products yet.")}</p>
+              ) : (
+                <div className="admin-product-list">
                   {products.map((product) => (
-                    <tr key={product.id}>
-                      <td>{product.name}</td>
-                      <td>₹{product.price}</td>
-                      <td>
-                        <button className="delete-btn" onClick={() => deleteProduct(product.id)}>
-                          🗑 {t("admin.delete")}
-                        </button>
-                      </td>
-                    </tr>
+                    <div key={product.id} className="admin-product-card">
+                      <img
+                        src={product.image || "https://via.placeholder.com/300x300?text=Product"}
+                        alt={product.name}
+                        className="admin-product-image"
+                        onError={(e) => {
+                          e.currentTarget.src = "https://via.placeholder.com/300x300?text=Product";
+                        }}
+                      />
+
+                      <div className="admin-product-meta">
+                        <h3>{product.name}</h3>
+                        <p>₹{product.price}</p>
+                      </div>
+
+                      <button className="delete-btn" onClick={() => deleteProduct(product.id)}>
+                        🗑 {t("admin.delete")}
+                      </button>
+                    </div>
                   ))}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -324,7 +336,7 @@ function AdminDashboard() {
 
             <div className="accounts-columns">
               <section className="admin-table">
-                <h2>Artisan Accounts ({artisans.length})</h2>
+                <h2>{t("admin.artisanAccounts", "Artisan Accounts")} ({artisans.length})</h2>
                 {artisans.length === 0 ? (
                   <p className="empty-text">{t("admin.noArtisans")}</p>
                 ) : (
@@ -333,7 +345,7 @@ function AdminDashboard() {
                       <div key={account.id} className="user-card">
                         <h3>👤 {account.username}</h3>
                         <p>
-                          <strong>{t("admin.role")}:</strong> artisan
+                          <strong>{t("admin.role")}:</strong> {t("signup.artisan", "Artisan")}
                         </p>
                         <p>
                           <strong>{t("admin.status")}:</strong> {account.blocked ? `🚫 ${t("admin.blocked")}` : `✅ ${t("admin.active")}`}
@@ -353,7 +365,7 @@ function AdminDashboard() {
               </section>
 
               <section className="admin-table">
-                <h2>Buyer Accounts ({buyers.length})</h2>
+                <h2>{t("admin.buyerAccounts", "Buyer Accounts")} ({buyers.length})</h2>
                 {buyers.length === 0 ? (
                   <p className="empty-text">{t("admin.noBuyers")}</p>
                 ) : (
@@ -362,7 +374,7 @@ function AdminDashboard() {
                       <div key={account.id} className="user-card">
                         <h3>👤 {account.username}</h3>
                         <p>
-                          <strong>{t("admin.role")}:</strong> buyer
+                          <strong>{t("admin.role")}:</strong> {t("signup.buyer", "Buyer")}
                         </p>
                         <p>
                           <strong>{t("admin.status")}:</strong> {account.blocked ? `🚫 ${t("admin.blocked")}` : `✅ ${t("admin.active")}`}

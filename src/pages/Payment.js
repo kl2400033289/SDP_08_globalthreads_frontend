@@ -1,16 +1,23 @@
 import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/CartContext";
 import { OrderContext } from "../context/OrderContext";
 import { AuthContext } from "../context/AuthContext";
+import { useLanguage } from "../context/LanguageContext";
 import QRCode from "qrcode";
 import "./Payment.css";
 
 function Payment() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { cart, clearCart } = useContext(CartContext);
   const { addOrder } = useContext(OrderContext);
   const { user } = useContext(AuthContext);
+  const { t } = useLanguage();
+
+  const checkoutSummary = location.state?.checkoutSummary || {};
+  const appliedCoupon = checkoutSummary.coupon || "";
+  const discount = Number(checkoutSummary.discount) || 0;
 
   const [loading, setLoading] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState("card");
@@ -23,9 +30,6 @@ function Payment() {
   });
 
   const [upiId, setUpiId] = useState("");
-
-  const [coupon, setCoupon] = useState("");
-  const [discount, setDiscount] = useState(0);
   const [upiQrCodeDataUrl, setUpiQrCodeDataUrl] = useState("");
 
   // ✅ Subtotal
@@ -39,6 +43,7 @@ function Payment() {
 
   // ✅ Final Total
   const total = Math.max(subtotal + deliveryCharge - discount, 0);
+  const taxesAndFees = 0;
   const formattedAmount = total.toFixed(2);
   const merchantUpiId = "globalthreads@upi";
   const upiPaymentLink = `upi://pay?pa=${encodeURIComponent(
@@ -71,46 +76,16 @@ function Payment() {
     };
   }, [upiPaymentLink]);
 
-  // ✅ Apply Coupon
-  const applyCoupon = () => {
-    const code = coupon.trim().toUpperCase();
-
-    if (code === "SAVE10") {
-      setDiscount(subtotal * 0.1);
-      alert("🎉 10% Discount Applied!");
-    } 
-    else if (code === "FLAT100") {
-      setDiscount(100);
-      alert("🎉 ₹100 Discount Applied!");
-    } 
-    else if (code === "WELCOME50") {
-      setDiscount(50);
-      alert("🎉 ₹50 Discount Applied!");
-    } 
-    else if (code === "FREESHIP") {
-      if (selectedMethod === "cod") {
-        setDiscount(100);
-        alert("🚚 Free Delivery Applied!");
-      } else {
-        alert("FREESHIP works only for COD");
-      }
-    } 
-    else {
-      setDiscount(0);
-      alert("❌ Invalid Coupon");
-    }
-  };
-
   const handlePayment = () => {
     if (selectedMethod === "card") {
       if (!cardDetails.number || !cardDetails.name || !cardDetails.expiry || !cardDetails.cvv) {
-        alert("Please fill all card details");
+        alert(t("payment.fillCardDetails", "Please fill all card details"));
         return;
       }
     }
 
     if (selectedMethod === "upi" && !upiId) {
-      alert("Please enter UPI ID");
+      alert(t("payment.enterUpiId", "Please enter UPI ID"));
       return;
     }
 
@@ -124,6 +99,7 @@ function Payment() {
         subtotal,
         deliveryCharge,
         discount,
+        coupon: appliedCoupon,
         total,
         paymentMethod: selectedMethod,
         date: new Date().toLocaleString(),
@@ -132,154 +108,238 @@ function Payment() {
       addOrder(newOrder);
       clearCart();
 
-      alert("✅ Payment Successful!");
+      alert(`✅ ${t("payment.success", "Payment Successful!")}`);
       navigate("/");
     }, 2000);
   };
 
+  const paymentOptions = [
+    {
+      id: "card",
+      label: t("payment.methodCard", "Credit Card"),
+      note: t("payment.methodCardNote", "Fast and secure card payment"),
+      icon: "CARD",
+      brands: ["visa", "mastercard", "rupay"],
+    },
+    {
+      id: "upi",
+      label: "UPI",
+      note: t("payment.methodUpiNote", "Pay instantly with any UPI app"),
+      icon: "UPI",
+      brands: ["gpay", "phonepe", "paytm"],
+    },
+    {
+      id: "cod",
+      label: t("payment.methodCod", "Cash on Delivery"),
+      note: t("payment.methodCodNote", "Pay at doorstep (+₹100 delivery)"),
+      icon: "COD",
+      brands: ["doorstep"],
+    },
+  ];
+
+  const renderBrandLogo = (brand) => {
+    if (brand === "visa") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="Visa">
+          <text x="8" y="13" className="brand-svg-text brand-svg-text-visa">VISA</text>
+        </svg>
+      );
+    }
+
+    if (brand === "mastercard") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="Mastercard">
+          <circle cx="23" cy="9" r="5.5" fill="#eb001b" />
+          <circle cx="31" cy="9" r="5.5" fill="#f79e1b" fillOpacity="0.9" />
+        </svg>
+      );
+    }
+
+    if (brand === "rupay") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="RuPay">
+          <polygon points="10,14 17,4 24,14" fill="#0078be" />
+          <polygon points="19,14 26,4 33,14" fill="#29a84a" fillOpacity="0.9" />
+          <polygon points="28,14 35,4 42,14" fill="#f58220" fillOpacity="0.9" />
+        </svg>
+      );
+    }
+
+    if (brand === "gpay") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="Google Pay">
+          <circle cx="27" cy="9" r="6" fill="#ffffff" />
+          <path d="M27 3 A6 6 0 0 1 33 9" stroke="#4285f4" strokeWidth="2" fill="none" />
+          <path d="M33 9 A6 6 0 0 1 27 15" stroke="#34a853" strokeWidth="2" fill="none" />
+          <path d="M27 15 A6 6 0 0 1 21 9" stroke="#fbbc05" strokeWidth="2" fill="none" />
+          <path d="M21 9 A6 6 0 0 1 27 3" stroke="#ea4335" strokeWidth="2" fill="none" />
+        </svg>
+      );
+    }
+
+    if (brand === "phonepe") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="PhonePe">
+          <circle cx="27" cy="9" r="6" fill="#5f259f" />
+          <path d="M24.5 6.5h3.8c1.1 0 2 .9 2 2v0c0 1.1-.9 2-2 2h-3.8" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path d="M26.4 5.8v6.4" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      );
+    }
+
+    if (brand === "paytm") {
+      return (
+        <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="Paytm">
+          <rect x="19" y="4.5" width="16" height="9" rx="2" fill="#00baf2" />
+          <rect x="21.5" y="6.5" width="11" height="5" rx="1.5" fill="#0f172a" />
+        </svg>
+      );
+    }
+
+    return (
+      <svg viewBox="0 0 54 18" className="brand-svg" role="img" aria-label="Doorstep">
+        <rect x="19" y="6" width="16" height="6" rx="2" fill="#8b1e2d" />
+        <circle cx="22" cy="13" r="1.4" fill="#8b1e2d" />
+        <circle cx="32" cy="13" r="1.4" fill="#8b1e2d" />
+      </svg>
+    );
+  };
+
   return (
     <div className="payment-page">
-      <div className="payment-card">
-        <h1>💳 Payment</h1>
+      <div className="payment-shell">
+        <aside className="payment-method-panel">
+          <h2>{t("payment.selectPayment", "3. Select payment")}</h2>
+          <div className="payment-methods">
+            {paymentOptions.map((method) => (
+              <button
+                key={method.id}
+                type="button"
+                className={`payment-method-option ${selectedMethod === method.id ? "active" : ""}`}
+                onClick={() => setSelectedMethod(method.id)}
+              >
+                <span className="method-dot" />
 
-        <div className="payment-summary">
-          <p>Subtotal: ₹{subtotal}</p>
-          <p>Delivery: ₹{deliveryCharge}</p>
-          <p>Discount: -₹{discount}</p>
-          <h2>Total: ₹{total}</h2>
-        </div>
+                <div className="method-main">
+                  <div className="method-header">
+                    <span className="method-icon">{method.icon}</span>
+                    <span className="method-label">{method.label}</span>
+                  </div>
+                  <span className="method-note">{method.note}</span>
+                </div>
 
-        {/* Coupon */}
-        <div className="coupon-box">
-          <input
-            type="text"
-            placeholder="Enter Coupon Code"
-            value={coupon}
-            onChange={(e) => setCoupon(e.target.value)}
-            className="payment-input"
-          />
-          <button className="coupon-btn" onClick={applyCoupon}>
-            Apply
-          </button>
-        </div>
-
-        {/* Demo Coupons */}
-        <div className="demo-coupons">
-          <p>Available Coupons:</p>
-          <div className="coupon-list">
-            <span onClick={() => setCoupon("SAVE10")}>SAVE10</span>
-            <span onClick={() => setCoupon("FLAT100")}>FLAT100</span>
-            <span onClick={() => setCoupon("WELCOME50")}>WELCOME50</span>
-            <span onClick={() => setCoupon("FREESHIP")}>FREESHIP</span>
+                <div className="method-brands">
+                  {method.brands.map((brand) => (
+                    <span key={brand} className={`brand-pill brand-pill-${brand}`}>
+                      {renderBrandLogo(brand)}
+                    </span>
+                  ))}
+                </div>
+              </button>
+            ))}
           </div>
-        </div>
+        </aside>
 
-        {/* Payment Methods */}
-        <div className="payment-methods">
-          <label>
-            <input
-              type="radio"
-              value="card"
-              checked={selectedMethod === "card"}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-            />
-            Credit / Debit Card (Free Delivery)
-          </label>
+        <section className="payment-main-card">
+          <div className="payment-summary-card">
+            <h3>{t("payment.orderSummary", "Order Summary")}</h3>
+            <p><span>{t("checkout.subtotal", "Subtotal")}</span><strong>₹{subtotal}</strong></p>
+            <p><span>{t("payment.delivery", "Delivery")}</span><strong>₹{deliveryCharge}</strong></p>
+            <p><span>{t("checkout.discount", "Discount")}</span><strong>-₹{discount}</strong></p>
+            {appliedCoupon && <p><span>{t("checkout.couponTitle", "Coupon")}</span><strong>{appliedCoupon}</strong></p>}
+            <p><span>{t("payment.taxesAndFees", "Taxes & Fees")}</span><strong>₹{taxesAndFees}</strong></p>
+            <h2><span>{t("checkout.total", "Total")}</span><strong>₹{total}</strong></h2>
+          </div>
 
-          <label>
-            <input
-              type="radio"
-              value="upi"
-              checked={selectedMethod === "upi"}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-            />
-            UPI (Free Delivery)
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              value="cod"
-              checked={selectedMethod === "cod"}
-              onChange={(e) => setSelectedMethod(e.target.value)}
-            />
-            Cash on Delivery (+₹100)
-          </label>
-        </div>
-
-        {/* Card Form */}
-        {selectedMethod === "card" && (
-          <div className="payment-form">
-            <input
-              type="text"
-              placeholder="Card Number"
-              value={cardDetails.number}
-              onChange={(e) =>
-                setCardDetails({ ...cardDetails, number: e.target.value })
-              }
-            />
-            <input
-              type="text"
-              placeholder="Card Holder Name"
-              value={cardDetails.name}
-              onChange={(e) =>
-                setCardDetails({ ...cardDetails, name: e.target.value })
-              }
-            />
-            <div className="row">
-              <input
-                type="text"
-                placeholder="MM/YY"
-                value={cardDetails.expiry}
-                onChange={(e) =>
-                  setCardDetails({ ...cardDetails, expiry: e.target.value })
-                }
-              />
-              <input
-                type="password"
-                placeholder="CVV"
-                value={cardDetails.cvv}
-                onChange={(e) =>
-                  setCardDetails({ ...cardDetails, cvv: e.target.value })
-                }
-              />
+          <div className="payment-form-card">
+            <h3>{t("payment.secureDetails", "Secure Payment Details")}</h3>
+            <div className="trust-row">
+              <span className="trust-pill">{t("payment.trustSsl", "256-bit SSL")}</span>
+              <span className="trust-pill">{t("payment.trustPci", "PCI Protected")}</span>
+              <span className="trust-pill">{t("payment.trustFraud", "Fraud Shield")}</span>
             </div>
-          </div>
-        )}
 
-        {/* UPI Form */}
-        {selectedMethod === "upi" && (
-          <div className="payment-form">
-            <div className="upi-qr-box">
-              <p className="upi-qr-title">Scan QR to pay with any UPI app</p>
-              {upiQrCodeDataUrl ? (
-                <img
-                  src={upiQrCodeDataUrl}
-                  alt="UPI Payment QR"
-                  className="upi-qr-image"
+            {selectedMethod === "card" && (
+              <div className="payment-form card-grid">
+                <input
+                  type="text"
+                  placeholder={t("payment.nameOnCard", "Name on card")}
+                  value={cardDetails.name}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, name: e.target.value })
+                  }
                 />
-              ) : (
-                <p className="upi-qr-fallback">Unable to load QR. Use UPI ID below.</p>
-              )}
-              <p className="upi-merchant-id">UPI ID: {merchantUpiId}</p>
-              <p className="upi-payable-amount">Payable: ₹{formattedAmount}</p>
-            </div>
-            <input
-              type="text"
-              placeholder="Enter UPI ID"
-              value={upiId}
-              onChange={(e) => setUpiId(e.target.value)}
-            />
-          </div>
-        )}
+                <input
+                  type="text"
+                  placeholder={t("payment.cardNumber", "0000 0000 0000 0000")}
+                  value={cardDetails.number}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, number: e.target.value })
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder={t("payment.cardExpiry", "MM / YY")}
+                  value={cardDetails.expiry}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, expiry: e.target.value })
+                  }
+                />
+                <input
+                  type="password"
+                  placeholder={t("payment.cardCvc", "CVC code")}
+                  value={cardDetails.cvv}
+                  onChange={(e) =>
+                    setCardDetails({ ...cardDetails, cvv: e.target.value })
+                  }
+                />
+              </div>
+            )}
 
-        <button
-          className="pay-btn"
-          onClick={handlePayment}
-          disabled={loading}
-        >
-          {loading ? "Processing..." : "Pay Now"}
-        </button>
+            {selectedMethod === "upi" && (
+              <div className="payment-form">
+                <div className="upi-qr-box">
+                  <p className="upi-qr-title">{t("payment.scanQr", "Scan QR to pay with any UPI app")}</p>
+                  {upiQrCodeDataUrl ? (
+                    <img
+                      src={upiQrCodeDataUrl}
+                      alt="UPI Payment QR"
+                      className="upi-qr-image"
+                    />
+                  ) : (
+                    <p className="upi-qr-fallback">{t("payment.qrLoadError", "Unable to load QR. Use UPI ID below.")}</p>
+                  )}
+                  <p className="upi-merchant-id">{t("payment.upiIdLabel", "UPI ID")}: {merchantUpiId}</p>
+                  <p className="upi-payable-amount">{t("payment.payable", "Payable")}: ₹{formattedAmount}</p>
+                </div>
+
+                <input
+                  type="text"
+                  placeholder={t("payment.enterUpiIdPlaceholder", "Enter UPI ID")}
+                  value={upiId}
+                  onChange={(e) => setUpiId(e.target.value)}
+                />
+              </div>
+            )}
+
+            {selectedMethod === "cod" && (
+              <div className="payment-form cod-note">
+                <p>{t("payment.codSelected", "Cash on Delivery selected.")}</p>
+                <p>{t("payment.codChangeNote", "Please keep exact change ready when possible.")}</p>
+              </div>
+            )}
+
+            <button
+              className="pay-btn"
+              onClick={handlePayment}
+              disabled={loading}
+            >
+              {loading ? t("payment.processing", "Processing...") : t("payment.submitSecure", "Submit Secure Payment")}
+            </button>
+
+            <p className="secure-note">{t("payment.secureNote", "Encrypted and secure payments")}</p>
+          </div>
+        </section>
       </div>
     </div>
   );

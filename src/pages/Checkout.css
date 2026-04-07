@@ -44,3 +44,83 @@
   justify-content: space-between;
   margin: 10px 0;
 }
+
+.checkout-total-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.discount-row {
+  color: #b45309;
+}
+
+.payable-row {
+  font-size: 18px;
+  margin-top: 12px;
+}
+
+.coupon-area {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.coupon-area h3 {
+  margin: 0 0 12px;
+}
+
+.coupon-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.coupon-box input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.coupon-btn {
+  background: #8b1e2d;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.demo-coupons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.demo-coupons span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f3ede7;
+  cursor: pointer;
+  border: 1px solid #e5d6c8;
+}
+
+.coupon-message {
+  margin: 10px 0 0;
+  color: #166534;
+}
+
+.coupon-active {
+  margin: 6px 0 0;
+  color: #8b1e2d;
+  font-weight: 600;
+}
+
+.checkout-grand-total {
+  margin-top: 14px;
+  color: #8b1e2d;
+}

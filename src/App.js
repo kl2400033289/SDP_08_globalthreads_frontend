@@ -16,10 +16,12 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
 import Wishlist from "./pages/Wishlist";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <BrowserRouter>
+      <Toaster position="top-center" />
       <Navbar />
 
       <Routes>

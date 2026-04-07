@@ -6,6 +6,7 @@ import { AuthContext } from "../context/AuthContext";
 import { WishlistContext } from "../context/WishlistContext";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
+import { saveCustomizationRequest } from "../utils/customizationRequests";
 import "./ProductDetail.css";
 
 function ProductDetail() {
@@ -294,6 +295,11 @@ function ProductDetail() {
                     toast.error(t("buyer.customTooShort"));
                     return;
                   }
+                  saveCustomizationRequest({
+                    product,
+                    message: customMsg,
+                    buyer: user,
+                  });
                   setCustomProduct(null);
                   setCustomMsg("");
                   toast.success(t("buyer.customSent"));

@@ -1,152 +1,361 @@
 .payment-page {
-  min-height: 80vh;
+  min-height: calc(100vh - 72px);
+  padding: 36px 24px 56px;
+  background: radial-gradient(circle at top right, rgba(200, 155, 60, 0.14), transparent 45%),
+    radial-gradient(circle at bottom left, rgba(127, 23, 37, 0.14), transparent 50%),
+    var(--bg-color);
+}
+
+.payment-shell {
+  width: min(1220px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.payment-method-panel {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.payment-method-panel h2 {
+  margin: 0 0 14px;
+  color: var(--primary);
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.payment-methods {
+  display: grid;
+  gap: 8px;
+}
+
+.payment-method-option {
+  border: 1px solid var(--border-color);
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  grid-template-areas:
+    "dot main"
+    ". brands";
+  align-items: start;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.payment-method-option:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(57, 31, 12, 0.1);
+}
+
+.payment-method-option.active {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary) inset, 0 12px 20px rgba(127, 23, 37, 0.12);
+}
+
+.method-dot {
+  grid-area: dot;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  margin-top: 22px;
+}
+
+.payment-method-option.active .method-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.method-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.method-header {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.method-icon {
+  font-size: 10px;
+  letter-spacing: 0.4px;
+  font-weight: 700;
+  color: var(--primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: var(--card-bg);
+}
+
+.method-label {
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.method-note {
+  font-size: 12px;
+  color: var(--text-color);
+  opacity: 0.8;
+  display: block;
+  margin-top: 4px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.method-brands {
+  grid-area: brands;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.brand-pill {
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: var(--card-bg);
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  min-width: 56px;
+  height: 26px;
 }
 
-.payment-card {
-  background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  text-align: center;
-  width: 320px;
+.brand-svg {
+  width: 42px;
+  height: 14px;
 }
 
-.payment-summary {
-  margin: 20px 0;
+.brand-svg-text {
+  font: 700 10px "Segoe UI", sans-serif;
+}
+
+.brand-svg-text-visa {
+  fill: #1a1f71;
+}
+
+.payment-main-card {
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+  overflow: hidden;
+  box-shadow: 0 18px 34px var(--shadow-color);
+}
+
+.payment-summary-card {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.payment-summary-card h3 {
+  margin: 0 0 10px;
+  color: var(--primary);
+}
+
+.payment-summary-card p,
+.payment-summary-card h2 {
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  color: var(--text-color);
+}
+
+.payment-summary-card h2 {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  color: var(--primary);
+  font-size: 26px;
+}
+
+.payment-form-card {
+  padding: 16px 18px 18px;
+}
+
+.payment-form-card h3 {
+  margin: 0 0 12px;
+  color: var(--primary);
+}
+
+.trust-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.trust-pill {
+  border: 1px solid var(--border-color);
+  background: var(--surface-soft);
+  color: var(--text-color);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.payment-form {
+  display: grid;
+  gap: 10px;
+}
+
+.card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.payment-form input {
+  width: 100%;
+  border-radius: 7px;
+  border: 1px solid var(--border-color);
+  padding: 11px 12px;
+  font-size: 14px;
+  box-sizing: border-box;
+  background: var(--surface-soft);
+  color: var(--text-color);
+}
+
+.payment-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(127, 23, 37, 0.12);
 }
 
 .pay-btn {
+  margin-top: 14px;
   width: 100%;
-  padding: 12px;
-  background: #8b1e2d;
-  color: white;
   border: none;
   border-radius: 8px;
-  font-size: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, var(--primary), var(--primary-strong));
+  color: #ffffff;
+  font-weight: 700;
   cursor: pointer;
 }
 
 .pay-btn:hover {
-  background: #a83244;
-}
-/* Payment Options */
-.payment-options {
-  text-align: left;
-  margin: 15px 0;
+  filter: brightness(1.06);
 }
 
-.payment-options label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  cursor: pointer;
+.pay-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
-/* Input Fields */
-.payment-input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 8px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
-.payment-input:focus {
-  outline: none;
-  border-color: #8b1e2d;
-}
-.coupon-box {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 15px;
-}
-
-.coupon-btn {
-  padding: 8px 10px;
-  background: #8b1e2d;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.coupon-btn:hover {
-  background: #a83244;
-}
-.demo-coupons {
-  margin-bottom: 15px;
-  font-size: 13px;
-  text-align: left;
-}
-
-.demo-coupons p {
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.coupon-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.coupon-list span {
-  background: #f3f3f3;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: 1px dashed #8b1e2d;
+.secure-note {
+  margin: 10px 0 0;
+  color: var(--text-color);
   font-size: 12px;
-}
-
-.coupon-list span:hover {
-  background: #8b1e2d;
-  color: white;
+  opacity: 0.75;
+  text-align: center;
 }
 
 .upi-qr-box {
-  margin-bottom: 12px;
-  border: 1px solid #e3d8d0;
+  border: 1px solid var(--border-color);
+  background: var(--surface-soft);
   border-radius: 10px;
-  padding: 10px;
-  background: #fffaf7;
+  padding: 12px;
+  text-align: center;
 }
 
 .upi-qr-title {
   margin: 0 0 8px;
+  color: var(--primary);
   font-size: 13px;
-  color: #5f3924;
-  font-weight: 600;
 }
 
 .upi-qr-image {
-  width: 180px;
-  height: 180px;
+  width: 220px;
+  height: 220px;
   border-radius: 8px;
-  border: 1px solid #e7e1dc;
-}
-
-.upi-qr-fallback {
-  margin: 8px 0;
-  font-size: 12px;
-  color: #8b1e2d;
-  font-weight: 600;
+  border: 1px solid var(--border-color);
 }
 
 .upi-merchant-id,
-.upi-payable-amount {
-  margin: 6px 0 0;
+.upi-payable-amount,
+.upi-qr-fallback {
+  margin: 8px 0 0;
+  color: var(--text-color);
   font-size: 12px;
-  color: #5f3924;
 }
 
-.upi-payable-amount {
-  font-weight: 700;
+.cod-note {
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-color);
+  background: var(--surface-soft);
+}
+
+.cod-note p {
+  margin: 0;
+}
+
+.cod-note p + p {
+  margin-top: 6px;
+}
+
+@media (max-width: 960px) {
+  .payment-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method-panel h2 {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .payment-page {
+    padding: 18px 12px 32px;
+  }
+
+  .payment-method-panel,
+  .payment-summary-card,
+  .payment-form-card {
+    padding: 14px;
+  }
+
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method-option {
+    grid-template-columns: 16px 1fr;
+    grid-template-areas:
+      "dot main"
+      ". brands";
+  }
+
+  .method-brands {
+    grid-column: 2;
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+
+  .brand-pill {
+    min-width: 52px;
+    height: 24px;
+  }
+
+  .upi-qr-image {
+    width: 180px;
+    height: 180px;
+  }
 }
