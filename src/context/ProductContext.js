@@ -1,11 +1,12 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import axios from "axios";
-import BASE_URL from "../api";
+import { PRODUCTS_BASE_URL } from "../api";
 import { defaultCatalog } from "../data/catalog";
 
 export const ProductContext = createContext();
 
-const API_URL = `${BASE_URL}/api/products`;
+const API_URL = PRODUCTS_BASE_URL;
+const MERGE_URL = `${PRODUCTS_BASE_URL}/merge`;
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
@@ -148,8 +149,6 @@ const normalizeProduct = (product = {}) => {
 export function ProductProvider({ children }) {
   const [products, setProductsState] = useState([]);
   const [ready, setReady] = useState(false);
-  const lastSyncedSignature = useRef("");
-  const canSyncToBackend = useRef(true);
 
   const setProducts = (nextValue) => {
     setProductsState((current) => {
@@ -173,68 +172,42 @@ export function ProductProvider({ children }) {
             ? data.products
             : [];
 
-        const loadedProducts = dedupeProductsById(
-          rawProducts.map(normalizeProduct)
-        ).filter((product) => product.name && product.image);
+        const loadedProducts = dedupeProductsById(rawProducts.map(normalizeProduct));
 
         if (!isMounted) {
           return;
         }
 
-        if (loadedProducts.length > 0) {
-          canSyncToBackend.current = true;
-          lastSyncedSignature.current = JSON.stringify(loadedProducts);
-          setProductsState(loadedProducts);
-        } else {
-          canSyncToBackend.current = true;
-          const seededProducts = dedupeProductsById(
-            defaultCatalog.map(normalizeProduct)
-          );
-          lastSyncedSignature.current = JSON.stringify(seededProducts);
-          setProductsState(seededProducts);
+        const catalogProducts = dedupeProductsById(defaultCatalog.map(normalizeProduct));
+        const mergedProducts = dedupeProductsById([
+          ...loadedProducts,
+          ...catalogProducts,
+        ]);
 
-          // Sync seed catalog to backend to make products permanent
-          try {
-            await axios.put(
-              `${API_URL}/sync`,
-              { products: seededProducts },
-              {
-                ...getAuthConfig(),
-                headers: {
-                  ...getAuthConfig().headers,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-          } catch (syncError) {
-            console.warn("Could not sync seed products to backend:", syncError);
-          }
+        setProductsState(mergedProducts);
+
+        // Persist merged catalog+db products without deleting existing rows.
+        try {
+          await axios.put(
+            MERGE_URL,
+            { products: mergedProducts },
+            {
+              ...getAuthConfig(),
+              headers: {
+                ...getAuthConfig().headers,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+        } catch (mergeError) {
+          console.warn("Could not merge products to backend:", mergeError);
         }
       } catch {
         if (isMounted) {
-          canSyncToBackend.current = true;
           const seededProducts = dedupeProductsById(
             defaultCatalog.map(normalizeProduct)
           );
-          lastSyncedSignature.current = JSON.stringify(seededProducts);
           setProductsState(seededProducts);
-
-          // Sync seed catalog to backend to make products permanent
-          try {
-            await axios.put(
-              `${API_URL}/sync`,
-              { products: seededProducts },
-              {
-                ...getAuthConfig(),
-                headers: {
-                  ...getAuthConfig().headers,
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-          } catch (syncError) {
-            console.warn("Could not sync seed products to backend:", syncError);
-          }
         }
       } finally {
         if (isMounted) {
@@ -249,46 +222,6 @@ export function ProductProvider({ children }) {
       isMounted = false;
     };
   }, []);
-
-  useEffect(() => {
-    if (!ready) {
-      return;
-    }
-
-    const normalizedProducts = dedupeProductsById(products.map(normalizeProduct));
-    const signature = JSON.stringify(normalizedProducts);
-
-    if (signature === lastSyncedSignature.current) {
-      return;
-    }
-
-    if (!canSyncToBackend.current) {
-      lastSyncedSignature.current = signature;
-      return;
-    }
-
-    const syncProducts = async () => {
-      try {
-        await axios.put(
-          `${API_URL}/sync`,
-          { products: normalizedProducts },
-          {
-            ...getAuthConfig(),
-            headers: {
-              ...getAuthConfig().headers,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        lastSyncedSignature.current = signature;
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    syncProducts();
-  }, [products, ready]);
 
   return (
     <ProductContext.Provider value={{ products, setProducts, ready }}>

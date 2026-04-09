@@ -5,6 +5,8 @@ import { ProductContext } from "../context/ProductContext";
 import { useLanguage } from "../context/LanguageContext";
 import ancientMusic from "../assets/harumachimusic-ancient-wind-112528.mp3";
 
+let hasShownWelcomeThisRuntime = false;
+
 
 function Home() {
   const { products, ready } = useContext(ProductContext);
@@ -13,11 +15,9 @@ function Home() {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // Check if user has already seen welcome overlay
-    const hasSeenWelcome = localStorage.getItem("hasSeenWelcome");
-    if (!hasSeenWelcome) {
+    if (!hasShownWelcomeThisRuntime) {
       setShowWelcome(true);
-      localStorage.setItem("hasSeenWelcome", "true");
+      hasShownWelcomeThisRuntime = true;
     }
   }, []);
 

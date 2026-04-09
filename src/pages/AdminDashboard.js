@@ -6,6 +6,11 @@ import { ProductContext } from "../context/ProductContext";
 import { OrderContext } from "../context/OrderContext";
 import { UserContext } from "../context/UserContext";
 import { useLanguage } from "../context/LanguageContext";
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct as deleteProductApi,
+} from "../api";
 import toast from "react-hot-toast";
 
 function AdminDashboard() {
@@ -16,6 +21,7 @@ function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [preview, setPreview] = useState("");
+  const [editingProductId, setEditingProductId] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -105,7 +111,7 @@ function AdminDashboard() {
     reader.readAsDataURL(file);
   };
 
-  const addProduct = (e) => {
+  const addProduct = async (e) => {
     e.preventDefault();
     const resolvedImage = form.image || form.imageUrl;
 
@@ -120,8 +126,7 @@ function AdminDashboard() {
       toast("This image is already in the database. Importing another copy.");
     }
 
-    const newProduct = {
-      id: Date.now(),
+    const productPayload = {
       name: form.name,
       title: form.name,
       price: Number(form.price),
@@ -142,7 +147,71 @@ function AdminDashboard() {
       reviews: [],
     };
 
-    setProducts((prev) => [...prev, newProduct]);
+    try {
+      if (editingProductId) {
+        const updatedProduct = await updateProduct(editingProductId, {
+          ...productPayload,
+          image: resolvedImage,
+        });
+
+        setProducts((prev) =>
+          prev.map((product) =>
+            product.id === editingProductId
+              ? { ...product, ...(updatedProduct || productPayload), id: editingProductId }
+              : product
+          )
+        );
+        toast.success("Product updated successfully.");
+      } else {
+        const newProduct = {
+          id: Date.now(),
+          ...productPayload,
+          image: resolvedImage,
+        };
+        const savedProduct = await createProduct(newProduct);
+        setProducts((prev) => [...prev, savedProduct || newProduct]);
+        toast.success("Product imported into the database.");
+      }
+
+      setForm({
+        name: "",
+        price: "",
+        costPrice: "",
+        category: "women",
+        rating: "",
+        color: "",
+        sizes: "",
+        description: "",
+        productStory: "",
+        imageUrl: "",
+        image: "",
+      });
+      setPreview("");
+      setEditingProductId(null);
+    } catch (error) {
+      toast.error(error?.message || "Failed to save product.");
+    }
+  };
+
+  const editProduct = (product) => {
+    setEditingProductId(product.id);
+    setForm({
+      name: product.name || "",
+      price: String(product.price ?? ""),
+      costPrice: product.costPrice == null ? "" : String(product.costPrice),
+      category: product.category || "general",
+      rating: product.rating == null ? "" : String(product.rating),
+      color: product.color || "",
+      sizes: Array.isArray(product.sizes) ? product.sizes.join(", ") : "",
+      description: product.description || "",
+      productStory: product.productStory || "",
+      imageUrl: product.imageUrl || product.image || "",
+      image: product.image || "",
+    });
+    setPreview(product.imageUrl || product.image || "");
+  };
+
+  const resetProductForm = () => {
     setForm({
       name: "",
       price: "",
@@ -157,11 +226,17 @@ function AdminDashboard() {
       image: "",
     });
     setPreview("");
-    toast.success("Product imported into the database.");
+    setEditingProductId(null);
   };
 
-  const deleteProduct = (id) => {
-    setProducts((prev) => prev.filter((product) => product.id !== id));
+  const deleteProduct = async (id) => {
+    try {
+      await deleteProductApi(id);
+      setProducts((prev) => prev.filter((product) => product.id !== id));
+      toast.success("Product deleted successfully.");
+    } catch (error) {
+      toast.error(error?.message || "Failed to delete product.");
+    }
   };
 
   const handleDisputeField = (e) => {
@@ -206,6 +281,7 @@ function AdminDashboard() {
 
   const forceLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     localStorage.removeItem("cart");
     alert(t("admin.sessionCleared"));
   };
@@ -409,7 +485,14 @@ function AdminDashboard() {
 
                 {preview && <img src={preview} alt="preview" className="image-preview" />}
 
-                <button type="submit">➕ {t("admin.addProduct")}</button>
+                <button type="submit">
+                  {editingProductId ? `✏️ ${t("update", "Update")}` : `➕ ${t("admin.addProduct")}`}
+                </button>
+                {editingProductId && (
+                  <button type="button" className="delete-btn" onClick={resetProductForm}>
+                    {t("common.cancel", "Cancel")}
+                  </button>
+                )}
               </form>
             </div>
 
@@ -425,6 +508,11 @@ function AdminDashboard() {
                       <td>{product.category || "general"}</td>
                       <td>
                         {product.costPrice == null ? "-" : `₹${product.costPrice}`}
+                      </td>
+                      <td>
+                        <button className="block-btn" onClick={() => editProduct(product)}>
+                          ✏️ {t("common.edit", "Edit")}
+                        </button>
                       </td>
                       <td>
                         <button className="delete-btn" onClick={() => deleteProduct(product.id)}>

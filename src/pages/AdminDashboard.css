@@ -311,7 +311,7 @@
   color: #334155;
 }
 /* 🔧 Marketing product cards */
-.order-card img {
+.admin-layout .order-card img {
   width: 100%;
   height: 180px;       /* controls size */
   object-fit: cover;   /* prevents stretching */
@@ -319,7 +319,7 @@
 }
 
 /* optional: make card width nice */
-.order-card {
+.admin-layout .order-card {
   max-width: 260px;
 }
 

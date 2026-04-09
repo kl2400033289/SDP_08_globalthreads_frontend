@@ -3,6 +3,7 @@ import { ProductContext } from "../context/ProductContext";
 import { OrderContext } from "../context/OrderContext";
 import { AuthContext } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { createProduct, updateProduct, deleteProduct } from "../api";
 import toast from "react-hot-toast";
 import "./ArtisanDashboard.css";
 
@@ -13,6 +14,7 @@ const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "Free Size"];
 const emptyForm = {
   name: "",
   price: "",
+  category: "women",
   sizes: [],
   productStory: "",
   description: "",
@@ -131,10 +133,11 @@ function ArtisanDashboard() {
     setEditingId(null);
   };
 
-  const handleSaveProduct = (e) => {
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
 
     if (!form.name.trim() || !form.price) {
+      toast.error("Please fill in all required fields.");
       return;
     }
 
@@ -151,32 +154,10 @@ function ArtisanDashboard() {
       toast("This image is already in the database. Importing another copy.");
     }
 
-    if (editingId) {
-      setProducts((prev) =>
-        prev.map((product) =>
-          product.id === editingId
-            ? {
-                ...product,
-                name: form.name.trim(),
-                price: Number(form.price) || 0,
-                sizes: form.sizes,
-                productStory: form.productStory.trim(),
-                description: form.description.trim(),
-                image: form.image || product.image,
-              }
-            : product
-        )
-      );
-
-      resetForm();
-      toast.success("Product updated.");
-      return;
-    }
-
-    const newProduct = {
-      id: Date.now(),
+    const productData = {
       name: form.name.trim(),
       price: Number(form.price) || 0,
+      category: String(form.category || "general").toLowerCase(),
       sizes: form.sizes,
       productStory: form.productStory.trim(),
       description: form.description.trim(),
@@ -186,9 +167,42 @@ function ArtisanDashboard() {
       artisan: user?.username || "artisan",
     };
 
-    setProducts((prev) => [newProduct, ...prev]);
-    resetForm();
-    toast.success("Product imported into the database.");
+    try {
+      if (editingId) {
+        // Update existing product
+        await updateProduct(editingId, productData);
+
+        setProducts((prev) =>
+          prev.map((product) =>
+            product.id === editingId
+              ? {
+                  ...product,
+                  ...productData,
+                }
+              : product
+          )
+        );
+
+        toast.success("Product updated successfully!");
+      } else {
+        // Create new product
+        const newProduct = {
+          id: Date.now(),
+          ...productData,
+        };
+
+        const savedProduct = await createProduct(newProduct);
+
+        setProducts((prev) => [savedProduct || newProduct, ...prev]);
+
+        toast.success("Product added to database successfully!");
+      }
+
+      resetForm();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      toast.error(error?.message || "Failed to save product. Please try again.");
+    }
   };
 
   const handleEditProduct = (product) => {
@@ -196,6 +210,7 @@ function ArtisanDashboard() {
     setForm({
       name: product.name || "",
       price: String(product.price ?? ""),
+      category: String(product.category || "general").toLowerCase(),
       sizes: product.sizes || [],
       productStory: product.productStory || "",
       description: product.description || "",
@@ -203,10 +218,18 @@ function ArtisanDashboard() {
     });
   };
 
-  const handleDeleteProduct = (id) => {
-    setProducts((prev) => prev.filter((product) => product.id !== id));
-    if (editingId === id) {
-      resetForm();
+  const handleDeleteProduct = async (id) => {
+    try {
+      await deleteProduct(id);
+
+      setProducts((prev) => prev.filter((product) => product.id !== id));
+      if (editingId === id) {
+        resetForm();
+      }
+      toast.success("Product deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error(error?.message || "Failed to delete product.");
     }
   };
 
@@ -290,6 +313,19 @@ function ArtisanDashboard() {
               onChange={handleFieldChange}
               required
             />
+
+            <label htmlFor="category">{t("productCategory", "Category")}</label>
+            <select
+              id="category"
+              name="category"
+              value={form.category}
+              onChange={handleFieldChange}
+              required
+            >
+              <option value="women">{t("shop.categoryWomen", "Women")}</option>
+              <option value="men">{t("shop.categoryMen", "Men")}</option>
+              <option value="general">{t("shop.categoryOther", "Other")}</option>
+            </select>
 
             <label>{t("productSizes", "Product Sizes")}</label>
             <div className="size-checkbox-grid">

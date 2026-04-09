@@ -155,3 +155,65 @@
 .demo-chip:hover {
   background: var(--surface-soft);
 }
+
+/* Real-time validation error styles */
+.field-error {
+  margin: -8px 0 8px 0;
+  font-size: 0.85rem;
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+.password-strength {
+  margin: -4px 0 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.password-strength.weak {
+  color: #d32f2f;
+}
+
+.password-strength.medium {
+  color: #ef6c00;
+}
+
+.password-strength.strong {
+  color: #1b7c33;
+}
+
+.password-rules {
+  margin: -4px 0 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  background: #fff8f1;
+}
+
+.password-rules p {
+  margin: 0 0 4px;
+  color: #6f4a33;
+  font-size: 0.8rem;
+}
+
+.password-rules p:last-child {
+  margin-bottom: 0;
+}
+
+.auth-form input.error {
+  border-color: #d32f2f;
+  background-color: #ffebee;
+}
+
+/* Disabled button styles */
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #ccc;
+  color: #666;
+}
+
+.primary-btn:disabled:hover {
+  background-color: #ccc;
+  transform: none;
+}

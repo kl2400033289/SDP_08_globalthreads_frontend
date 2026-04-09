@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { registerUser } from "../api";
+import {
+  getSignupPasswordStrength,
+  SIGNUP_PASSWORD_SPECIAL_CHARACTERS,
+  validateEmail,
+  validatePhoneNumber,
+  validateSignupPassword,
+  validateUsername,
+} from "../utils/validation";
 
 function Signup() {
   const navigate = useNavigate();
@@ -14,37 +22,101 @@ function Signup() {
     username: "",
     email: "",
     password: "",
+    phone: "",
     role: "buyer",
   });
 
   const [message, setMessage] = useState({ text: "", type: "" });
+  
+  const [fieldErrors, setFieldErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
+
+  const [touched, setTouched] = useState({
+    username: false,
+    email: false,
+    password: false,
+    phone: false,
+  });
+
+  const passwordStrength = getSignupPasswordStrength(form.password);
 
   const handleChange = (e) => {
     setMessage({ text: "", type: "" });
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+
+    // Real-time validation
+    if (name === "username") {
+      const usernameValidation = validateUsername(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        username: usernameValidation.error
+      }));
+    } else if (name === "email") {
+      const emailValidation = validateEmail(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        email: emailValidation.error
+      }));
+    } else if (name === "password") {
+      const passwordValidation = validateSignupPassword(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        password: passwordValidation.error
+      }));
+    } else if (name === "phone") {
+      const phoneValidation = validatePhoneNumber(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        phone: phoneValidation.error
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.username.trim().length < 3) {
-      setMessage({ text: t("signup.usernameMin"), type: "error" });
+    // Validate username
+    const usernameValidation = validateUsername(form.username);
+    if (!usernameValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, username: usernameValidation.error }));
+      setTouched(prev => ({ ...prev, username: true }));
       return;
     }
 
-    if (!form.email.trim()) {
-      setMessage({ text: t("signup.emailRequired"), type: "error" });
+    // Validate email
+    const emailValidation = validateEmail(form.email);
+    if (!emailValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, email: emailValidation.error }));
+      setTouched(prev => ({ ...prev, email: true }));
       return;
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(form.email.trim())) {
-      setMessage({ text: t("signup.emailInvalid"), type: "error" });
+    // Validate password
+    const passwordValidation = validateSignupPassword(form.password);
+    if (!passwordValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, password: passwordValidation.error }));
+      setTouched(prev => ({ ...prev, password: true }));
       return;
     }
 
-    if (form.password.length < 6) {
-      setMessage({ text: t("signup.passwordMin"), type: "error" });
+    // Validate phone number
+    const phoneValidation = validatePhoneNumber(form.phone);
+    if (!phoneValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, phone: phoneValidation.error }));
+      setTouched(prev => ({ ...prev, phone: true }));
       return;
     }
 
@@ -53,12 +125,36 @@ function Signup() {
       return;
     }
 
+    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
+    const normalizedEmail = form.email.trim().toLowerCase();
+    const duplicateEmail = storedUsers.some(
+      (entry) => entry.email && entry.email.trim().toLowerCase() === normalizedEmail
+    );
+
+    if (duplicateEmail) {
+      setMessage({
+        text: "This email is already registered with a role. Please use the same email to log in instead of creating another account.",
+        type: "error",
+      });
+      return;
+    }
+
     try {
       const responseText = await registerUser({
         username: form.username.trim(),
-        email: form.email.trim().toLowerCase(),
+        email: normalizedEmail,
         password: form.password,
       });
+
+      storedUsers.push({
+        id: Date.now(),
+        username: form.username.trim(),
+        email: normalizedEmail,
+        password: form.password,
+        role: form.role,
+        phone: form.phone.trim(),
+      });
+      localStorage.setItem("users", JSON.stringify(storedUsers));
 
       alert(responseText);
       setMessage({ text: t("signup.accountCreated"), type: "success" });
@@ -90,8 +186,12 @@ function Signup() {
             placeholder={t("signup.chooseUsername")}
             value={form.username}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
           />
+          {touched.username && fieldErrors.username && (
+            <p className="error-text field-error">{fieldErrors.username}</p>
+          )}
 
           <label htmlFor="signup-email">{t("signup.email")}</label>
           <input
@@ -101,8 +201,27 @@ function Signup() {
             placeholder={t("signup.enterEmail")}
             value={form.email}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
           />
+          {touched.email && fieldErrors.email && (
+            <p className="error-text field-error">{fieldErrors.email}</p>
+          )}
+
+          <label htmlFor="signup-phone">Phone Number (10 digits)</label>
+          <input
+            id="signup-phone"
+            type="tel"
+            name="phone"
+            placeholder="1234567890"
+            value={form.phone}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            required
+          />
+          {touched.phone && fieldErrors.phone && (
+            <p className="error-text field-error">{fieldErrors.phone}</p>
+          )}
 
           <label htmlFor="signup-role">{t("signup.role")}</label>
           <select
@@ -126,6 +245,7 @@ function Signup() {
               placeholder={t("signup.createPassword")}
               value={form.password}
               onChange={handleChange}
+              onBlur={handleBlur}
               required
             />
             <button
@@ -135,6 +255,26 @@ function Signup() {
             >
               {showPassword ? t("login.hide") : t("login.show")}
             </button>
+          </div>
+          {touched.password && fieldErrors.password && (
+            <p className="error-text field-error">{fieldErrors.password}</p>
+          )}
+          {passwordStrength && (
+            <p
+              className={`password-strength ${passwordStrength.toLowerCase()}`}
+            >
+              Password strength: {passwordStrength}
+            </p>
+          )}
+          <div className="password-rules">
+            <p>Use a password with:</p>
+            <p>At least 8 characters and no more than 128 characters.</p>
+            <p>At least one uppercase and one lowercase letter.</p>
+            <p>At least one numeral and no spaces.</p>
+            <p>
+              Add at least one special character for Strong:
+              {` ${SIGNUP_PASSWORD_SPECIAL_CHARACTERS}`}
+            </p>
           </div>
 
           <label htmlFor="signup-confirm-password">{t("signup.confirmPassword")}</label>
@@ -160,7 +300,18 @@ function Signup() {
             </p>
           )}
 
-          <button type="submit" className="primary-btn auth-submit">
+          <button 
+            type="submit" 
+            className="primary-btn auth-submit"
+            disabled={
+              fieldErrors.username || 
+              fieldErrors.email || 
+              fieldErrors.password || 
+              fieldErrors.phone ||
+              !confirmPassword ||
+              form.password !== confirmPassword
+            }
+          >
             {t("signup.submit")}
           </button>
         </form>

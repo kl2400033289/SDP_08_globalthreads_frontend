@@ -4,6 +4,7 @@ import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
 import { loginUser } from "../api";
+import { validateEmail, validatePassword } from "../utils/validation";
 
 const parseJwtPayload = (token) => {
   try {
@@ -34,6 +35,14 @@ function Login() {
   });
 
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({
+    email: "",
+    password: "",
+  });
+  const [touched, setTouched] = useState({
+    email: false,
+    password: false,
+  });
 
   const demoAccounts = [
     {
@@ -60,7 +69,31 @@ function Login() {
 
   const handleChange = (e) => {
     setError("");
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+    
+    // Real-time validation
+    if (name === "email") {
+      const emailValidation = validateEmail(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        email: emailValidation.error
+      }));
+    } else if (name === "password") {
+      const passwordValidation = validatePassword(value);
+      setFieldErrors(prev => ({
+        ...prev,
+        password: passwordValidation.error
+      }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
   };
 
   const fillDemoAccount = ({ email, password }) => {
@@ -75,7 +108,7 @@ function Login() {
     if (result.success) {
       setError("");
       alert(`${account.role} demo login successful`);
-      window.location.href = "/";
+      navigate("/", { replace: true });
       return;
     }
 
@@ -86,6 +119,22 @@ function Login() {
     e.preventDefault();
 
     const email = form.email.trim();
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, email: emailValidation.error }));
+      setTouched(prev => ({ ...prev, email: true }));
+      return;
+    }
+
+    // Validate password
+    const passwordValidation = validatePassword(form.password);
+    if (!passwordValidation.isValid) {
+      setFieldErrors(prev => ({ ...prev, password: passwordValidation.error }));
+      setTouched(prev => ({ ...prev, password: true }));
+      return;
+    }
 
     try {
       const token = await loginUser({
@@ -114,14 +163,14 @@ function Login() {
       });
 
       alert("Login successful");
-      window.location.href = "/";
+      navigate("/", { replace: true });
     } catch (apiError) {
       // Fallback to local demo/custom user auth when backend demo account is unavailable.
       const fallback = login(email, form.password);
 
       if (fallback.success) {
         alert("Login successful");
-        window.location.href = "/";
+        navigate("/", { replace: true });
         return;
       }
 
@@ -141,16 +190,20 @@ function Login() {
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
-          <label htmlFor="email">{t("login.emailOrUsername")}</label>
+          <label htmlFor="email">{t("login.email") || "Email"}</label>
           <input
             id="email"
-            type="text"
+            type="email"
             name="email"
-            placeholder={t("login.enterEmailOrUsername")}
+            placeholder={t("login.enterEmail") || "Enter your email"}
             value={form.email}
             onChange={handleChange}
+            onBlur={handleBlur}
             required
           />
+          {touched.email && fieldErrors.email && (
+            <p className="error-text field-error">{fieldErrors.email}</p>
+          )}
 
           <label htmlFor="password">{t("login.password")}</label>
           <div className="password-row">
@@ -161,6 +214,7 @@ function Login() {
               placeholder={t("login.enterPassword")}
               value={form.password}
               onChange={handleChange}
+              onBlur={handleBlur}
               required
             />
             <button
@@ -171,10 +225,17 @@ function Login() {
               {showPassword ? t("login.hide") : t("login.show")}
             </button>
           </div>
+          {touched.password && fieldErrors.password && (
+            <p className="error-text field-error">{fieldErrors.password}</p>
+          )}
 
           {error && <p className="auth-message error-text">{error}</p>}
 
-          <button type="submit" className="primary-btn auth-submit">
+          <button 
+            type="submit" 
+            className="primary-btn auth-submit"
+            disabled={fieldErrors.email || fieldErrors.password}
+          >
             {t("login.submit")}
           </button>
         </form>

@@ -1,21 +1,207 @@
 .payment-page {
-  min-height: 80vh;
-  display: flex;
+  min-height: calc(100vh - 80px);
+  padding: 22px 28px 30px;
+  background: #f5efe6;
+}
+
+.payment-layout {
+  max-width: 1450px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
+.payment-method-panel {
+  background: #fffdfa;
+  border: 1px solid #e8d6c1;
+  border-radius: 14px;
+  padding: 14px;
+  position: sticky;
+  top: 90px;
+}
+
+.payment-method-panel h2 {
+  margin: 4px 0 14px;
+  color: #7a1224;
+  line-height: 1.1;
+  font-size: clamp(1.8rem, 2.8vw, 2.8rem);
+}
+
+.method-card {
+  width: 100%;
+  border: 1px solid #d6c8b8;
+  border-radius: 12px;
+  background: #f7efe2;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
   align-items: center;
-  justify-content: center;
+  text-align: left;
+  cursor: pointer;
 }
 
-.payment-card {
-  background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-  text-align: center;
-  width: 320px;
+.method-card input {
+  margin: 0;
 }
 
-.payment-summary {
-  margin: 20px 0;
+.method-card strong {
+  font-size: 1.75rem;
+  color: #2d1a10;
+}
+
+.method-card p {
+  margin: 4px 0 0;
+  color: #564134;
+  font-size: 1.2rem;
+}
+
+.method-card.active {
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 2px rgba(139, 30, 45, 0.14);
+}
+
+.payment-main-panel {
+  background: #fffdfa;
+  border: 1px solid #e8d6c1;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.order-summary-box {
+  padding: 16px 22px;
+}
+
+.order-summary-box h2 {
+  margin: 0 0 12px;
+  font-size: 2.1rem;
+  color: #7a1224;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 1.7rem;
+  color: #312117;
+}
+
+.coupon-note {
+  margin: 6px 0 4px;
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.summary-divider {
+  height: 1px;
+  background: #e4d6c6;
+  margin: 10px 0;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 2rem;
+  color: #7a1224;
+  font-weight: 700;
+}
+
+.payment-details-box {
+  border-top: 1px solid #e4d6c6;
+  padding: 16px 22px 20px;
+}
+
+.payment-details-box h3 {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #7a1224;
+}
+
+.security-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+
+.security-tags span {
+  background: #f3ede3;
+  border: 1px solid #e4d6c6;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.92rem;
+}
+
+.payment-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.payment-form-grid input,
+.upi-block input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d7c7b3;
+  background: #f5ecde;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 1rem;
+}
+
+.payment-form-grid input:focus,
+.upi-block input:focus {
+  outline: none;
+  border-color: #8b1e2d;
+  box-shadow: 0 0 0 3px rgba(139, 30, 45, 0.12);
+}
+
+.upi-block {
+  display: grid;
+  gap: 12px;
+}
+
+.upi-qr-box {
+  border: 1px solid #e8d7c6;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fdf8f1;
+}
+
+.upi-qr-box p {
+  margin: 6px 0;
+  font-size: 0.95rem;
+  color: #533b2d;
+}
+
+.upi-qr-image {
+  width: 170px;
+  height: 170px;
+  border-radius: 10px;
+  border: 1px solid #dccbb8;
+}
+
+.upi-qr-fallback {
+  color: #8b1e2d;
+  font-weight: 600;
+}
+
+.cod-note {
+  background: #f7eee2;
+  border: 1px solid #e2d2bf;
+  border-radius: 10px;
+  padding: 14px;
+  color: #4f3728;
+}
+
+.payment-error {
+  margin: 12px 0 0;
+  color: #b00020;
+  font-weight: 600;
 }
 
 .pay-btn {
@@ -24,129 +210,54 @@
   background: #8b1e2d;
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 10px;
+  font-size: 1.08rem;
+  font-weight: 700;
   cursor: pointer;
+  margin-top: 14px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .pay-btn:hover {
-  background: #a83244;
-}
-/* Payment Options */
-.payment-options {
-  text-align: left;
-  margin: 15px 0;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(139, 30, 45, 0.28);
 }
 
-.payment-options label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  cursor: pointer;
+.pay-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* Input Fields */
-.payment-input {
-  width: 100%;
-  padding: 8px;
-  margin-top: 8px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 14px;
-  box-sizing: border-box;
+.secure-note {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #665042;
+  font-size: 0.95rem;
 }
 
-.payment-input:focus {
-  outline: none;
-  border-color: #8b1e2d;
-}
-.coupon-box {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 15px;
+@media (max-width: 1100px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-method-panel {
+    position: static;
+  }
+
+  .payment-form-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.coupon-btn {
-  padding: 8px 10px;
-  background: #8b1e2d;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
+@media (max-width: 768px) {
+  .payment-page {
+    padding: 16px 10px 20px;
+  }
 
-.coupon-btn:hover {
-  background: #a83244;
-}
-.demo-coupons {
-  margin-bottom: 15px;
-  font-size: 13px;
-  text-align: left;
-}
-
-.demo-coupons p {
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.coupon-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.coupon-list span {
-  background: #f3f3f3;
-  padding: 4px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  border: 1px dashed #8b1e2d;
-  font-size: 12px;
-}
-
-.coupon-list span:hover {
-  background: #8b1e2d;
-  color: white;
-}
-
-.upi-qr-box {
-  margin-bottom: 12px;
-  border: 1px solid #e3d8d0;
-  border-radius: 10px;
-  padding: 10px;
-  background: #fffaf7;
-}
-
-.upi-qr-title {
-  margin: 0 0 8px;
-  font-size: 13px;
-  color: #5f3924;
-  font-weight: 600;
-}
-
-.upi-qr-image {
-  width: 180px;
-  height: 180px;
-  border-radius: 8px;
-  border: 1px solid #e7e1dc;
-}
-
-.upi-qr-fallback {
-  margin: 8px 0;
-  font-size: 12px;
-  color: #8b1e2d;
-  font-weight: 600;
-}
-
-.upi-merchant-id,
-.upi-payable-amount {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: #5f3924;
-}
-
-.upi-payable-amount {
-  font-weight: 700;
+  .order-summary-box,
+  .payment-details-box {
+    padding: 14px;
+  }
 }

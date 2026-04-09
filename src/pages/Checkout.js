@@ -14,24 +14,73 @@ function Checkout() {
     address: "",
     phone: "",
   });
+  const [coupon, setCoupon] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState("");
+  const [discount, setDiscount] = useState(0);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const total = cart.reduce(
+  const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.qty,
     0
   );
+  const total = Math.max(subtotal - discount, 0);
+
+  const applyCoupon = () => {
+    const code = coupon.trim().toUpperCase();
+
+    if (!code) {
+      setDiscount(0);
+      setAppliedCoupon("");
+      return;
+    }
+
+    if (code === "SAVE10") {
+      setDiscount(subtotal * 0.1);
+      setAppliedCoupon(code);
+      return;
+    }
+
+    if (code === "FLAT100") {
+      setDiscount(100);
+      setAppliedCoupon(code);
+      return;
+    }
+
+    if (code === "WELCOME50") {
+      setDiscount(50);
+      setAppliedCoupon(code);
+      return;
+    }
+
+    setDiscount(0);
+    setAppliedCoupon("");
+    alert("Invalid coupon code");
+  };
 
   const placeOrder = () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty");
+      return;
+    }
+
     if (!form.name || !form.address || !form.phone) {
       alert(t("checkout.fillDetails"));
       return;
     }
 
-    // save shipping temporarily
     localStorage.setItem("shipping", JSON.stringify(form));
+    localStorage.setItem(
+      "checkoutPricing",
+      JSON.stringify({
+        subtotal,
+        discount,
+        coupon: appliedCoupon,
+        total,
+      })
+    );
 
     navigate("/payment");
   };
@@ -74,7 +123,6 @@ function Checkout() {
           </button>
         </div>
 
-        {/* ===== ORDER SUMMARY ===== */}
         <div className="checkout-summary">
           <h2>{t("checkout.orderSummary")}</h2>
 
@@ -87,8 +135,41 @@ function Checkout() {
             </div>
           ))}
 
+          <div className="summary-divider" />
+
+          <div className="summary-item">
+            <span>Subtotal</span>
+            <span>₹{subtotal}</span>
+          </div>
+
+          <div className="summary-item discount-line">
+            <span>Discount</span>
+            <span>-₹{discount.toFixed(0)}</span>
+          </div>
+
+          <div className="coupon-block">
+            <h3>Coupon</h3>
+            <div className="coupon-row">
+              <input
+                type="text"
+                value={coupon}
+                onChange={(e) => setCoupon(e.target.value)}
+                placeholder="Enter coupon code"
+              />
+              <button className="coupon-btn" type="button" onClick={applyCoupon}>
+                Apply
+              </button>
+            </div>
+            <div className="coupon-chip-row">
+              <button type="button" onClick={() => setCoupon("SAVE10")}>SAVE10</button>
+              <button type="button" onClick={() => setCoupon("FLAT100")}>FLAT100</button>
+              <button type="button" onClick={() => setCoupon("WELCOME50")}>WELCOME50</button>
+            </div>
+            {appliedCoupon && <p className="coupon-applied">Applied: {appliedCoupon}</p>}
+          </div>
+
           <hr />
-          <h3>{t("checkout.total")}: ₹{total}</h3>
+          <h3 className="summary-total">{t("checkout.total")}: ₹{total.toFixed(0)}</h3>
         </div>
       </div>
     </div>

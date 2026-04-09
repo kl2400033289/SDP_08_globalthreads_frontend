@@ -15,6 +15,7 @@ function ForgotPassword() {
   const [step, setStep] = useState(1); // 1: email, 2: OTP, 3: new password
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
@@ -48,6 +49,10 @@ function ForgotPassword() {
       });
 
       setStep(3);
+      setOldPassword(""); // Reset old password field for step 3
+      setNewPassword(""); // Reset new password field
+      setConfirmPassword(""); // Reset confirm password field
+      setStrength("");
       setSuccess(responseText || "OTP verified successfully.");
     } catch (error) {
       setError(error?.message || "Invalid OTP. Please try again.");
@@ -71,13 +76,28 @@ function ForgotPassword() {
   // Step 3: Update password
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate old password is provided
+    if (!oldPassword.trim()) {
+      setError("Please enter your old password");
+      return;
+    }
+
+    // Validate new password matches confirm password
     if (newPassword !== confirmPassword) {
       setError(t("signup.passwordMismatch"));
       return;
     }
 
+    // Validate new password length
     if (newPassword.length < 6) {
       setError(t("signup.passwordMin"));
+      return;
+    }
+
+    // Validate new password is different from old password
+    if (oldPassword === newPassword) {
+      setError("New password must be different from your old password");
       return;
     }
 
@@ -149,6 +169,16 @@ function ForgotPassword() {
 
       {step === 3 && (
         <form className="login-form" onSubmit={handlePasswordSubmit}>
+          <input
+            type="password"
+            placeholder="Enter your old password"
+            value={oldPassword}
+            onChange={(e) => {
+              setOldPassword(e.target.value);
+              setMessage({ text: "", type: "" });
+            }}
+            required
+          />
           <input
             type="password"
             placeholder={t("forgot.newPassword")}

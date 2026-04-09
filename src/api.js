@@ -1,5 +1,6 @@
 const BASE_URL = "http://localhost:8080";
 export const AUTH_BASE_URL = `${BASE_URL}/auth`;
+export const PRODUCTS_BASE_URL = "http://localhost:5000/api/products";
 
 const JSON_HEADERS = {
 	"Content-Type": "application/json",
@@ -87,6 +88,68 @@ export const authFetch = (url, options = {}) => {
 		...options,
 		headers: mergedHeaders,
 	});
+};
+
+// Product API functions
+export const createProduct = async (productData) => {
+	try {
+		const response = await authFetch(PRODUCTS_BASE_URL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(productData),
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(error || "Failed to create product");
+		}
+
+		const result = await response.json();
+		return result.product;
+	} catch (error) {
+		throw error;
+	}
+};
+
+export const updateProduct = async (productId, productData) => {
+	try {
+		const response = await authFetch(`${PRODUCTS_BASE_URL}/${productId}`, {
+			method: "PUT",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify(productData),
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(error || "Failed to update product");
+		}
+
+		const result = await response.json();
+		return result.product;
+	} catch (error) {
+		throw error;
+	}
+};
+
+export const deleteProduct = async (productId) => {
+	try {
+		const response = await authFetch(`${PRODUCTS_BASE_URL}/${productId}`, {
+			method: "DELETE",
+		});
+
+		if (!response.ok) {
+			const error = await response.text();
+			throw new Error(error || "Failed to delete product");
+		}
+
+		return await response.json();
+	} catch (error) {
+		throw error;
+	}
 };
 
 export default BASE_URL;

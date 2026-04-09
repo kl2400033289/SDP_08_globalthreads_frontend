@@ -8,12 +8,16 @@ export function AuthProvider({ children }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // persist login
+  // Persist login state and avoid writing "null" user payloads.
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [user]);
 
-  const login = (emailOrUsername, password) => {
+  const login = (email, password) => {
     const demoUsers = {
       admin: {
         password: "admin123",
@@ -41,28 +45,15 @@ export function AuthProvider({ children }) {
       },
     };
 
-    const normalizedIdentifier = emailOrUsername.trim().toLowerCase();
+    const normalizedEmail = email.trim().toLowerCase();
 
     const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    
-    // Try to find by email first
-    let customUser = storedUsers.find(
-      (entry) =>
-        entry.email && entry.email.trim().toLowerCase() === normalizedIdentifier
-    );
 
-    // If no email match, find all users with matching username
-    if (!customUser) {
-      const usernameMatches = storedUsers.filter(
-        (entry) =>
-          entry.username.trim().toLowerCase() === normalizedIdentifier
-      );
-      
-      // Try each username match to find one with correct password
-      customUser = usernameMatches.find(
-        (entry) => entry.password === password
-      );
-    }
+    // Email-only login for custom users.
+    const customUser = storedUsers.find(
+      (entry) =>
+        entry.email && entry.email.trim().toLowerCase() === normalizedEmail
+    );
 
     if (customUser && customUser.password === password) {
       setUser({ role: customUser.role, username: customUser.username, email: customUser.email });
@@ -70,13 +61,15 @@ export function AuthProvider({ children }) {
     }
 
     const foundDemoUser = Object.values(demoUsers).find(
-      (entry) =>
-        entry.username === normalizedIdentifier ||
-        entry.email === normalizedIdentifier
+      (entry) => entry.email === normalizedEmail
     );
 
     if (foundDemoUser && foundDemoUser.password === password) {
-      setUser({ role: foundDemoUser.role, username: foundDemoUser.username });
+      setUser({
+        role: foundDemoUser.role,
+        username: foundDemoUser.username,
+        email: foundDemoUser.email,
+      });
       return { success: true, role: foundDemoUser.role };
     }
 
@@ -98,6 +91,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     localStorage.removeItem("cart");
   };
 
