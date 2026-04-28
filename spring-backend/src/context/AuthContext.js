@@ -10,22 +10,38 @@ export function AuthProvider({ children }) {
 
   // persist login
   useEffect(() => {
-    localStorage.setItem("user", JSON.stringify(user));
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+    }
   }, [user]);
 
 
-  const login = (username, password) => {
+  const login = (email, password) => {
     const users = {
-      admin: { password: "admin123", role: "admin" },
-      artisan: { password: "artisan123", role: "artisan" },
-      buyer: { password: "buyer123", role: "buyer" },
-      marketing: { password: "marketing123", role: "marketing" },
+      admin: { password: "admin123", role: "admin", email: "admin@globalthreads.com" },
+      artisan: { password: "artisan123", role: "artisan", email: "artisan@globalthreads.com" },
+      buyer: { password: "buyer123", role: "buyer", email: "buyer@globalthreads.com" },
+      marketing: { password: "marketing123", role: "marketing", email: "marketing@globalthreads.com" },
     };
 
-    const foundUser = users[username.toLowerCase()];
+    const normalizedEmail = email.trim().toLowerCase();
+    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
+
+    const customUser = storedUsers.find(
+      (entry) => entry.email && entry.email.trim().toLowerCase() === normalizedEmail
+    );
+
+    if (customUser && customUser.password === password) {
+      setUser({ role: customUser.role, username: customUser.username, email: customUser.email });
+      return { success: true, role: customUser.role };
+    }
+
+    const foundUser = Object.values(users).find((entry) => entry.email === normalizedEmail);
 
     if (foundUser && foundUser.password === password) {
-      setUser({ role: foundUser.role, username });
+      setUser({ role: foundUser.role, username: foundUser.role, email: foundUser.email });
       return { success: true, role: foundUser.role };
     }
 

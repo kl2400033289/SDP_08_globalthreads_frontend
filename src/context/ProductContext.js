@@ -6,7 +6,7 @@ import { defaultCatalog } from "../data/catalog";
 export const ProductContext = createContext();
 
 const API_URL = PRODUCTS_BASE_URL;
-const MERGE_URL = `${PRODUCTS_BASE_URL}/merge`;
+const PRODUCTS_STORAGE_KEY = "products";
 
 const getAuthConfig = () => {
   const token = localStorage.getItem("token");
@@ -32,6 +32,18 @@ const dedupeProductsById = (items = []) => {
   });
 
   return Array.from(productMap.values());
+};
+
+const readStoredProducts = () => {
+  try {
+    return JSON.parse(localStorage.getItem(PRODUCTS_STORAGE_KEY)) || [];
+  } catch {
+    return [];
+  }
+};
+
+const writeStoredProducts = (products) => {
+  localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
 };
 
 const isBlank = (value) =>
@@ -90,15 +102,6 @@ const normalizeProduct = (product = {}) => {
     ""
   );
 
-  const resolvedCostPrice = pickFirstNonBlank(
-    product.costPrice,
-    catalogFallback.costPrice,
-    null
-  );
-  const numericCostPrice = isBlank(resolvedCostPrice)
-    ? null
-    : toNumberOr(resolvedCostPrice, null);
-
   return {
     id: toNumberOr(pickFirstNonBlank(product.id, catalogFallback.id, Date.now()), Date.now()),
     name: resolvedName,
@@ -107,14 +110,11 @@ const normalizeProduct = (product = {}) => {
       pickFirstNonBlank(
         product.price,
         product.sellingPrice,
-        product.costPrice,
         catalogFallback.price,
-        catalogFallback.costPrice,
         0
       ),
       0
     ),
-    costPrice: numericCostPrice,
     stock: toNumberOr(pickFirstNonBlank(product.stock, catalogFallback.stock, 0), 0),
     designNotes: pickFirstNonBlank(product.designNotes, catalogFallback.designNotes, ""),
     image: resolvedImage,
@@ -154,8 +154,12 @@ export function ProductProvider({ children }) {
     setProductsState((current) => {
       const resolvedValue =
         typeof nextValue === "function" ? nextValue(current) : nextValue;
+      const normalizedProducts = dedupeProductsById(
+        (resolvedValue || []).map(normalizeProduct)
+      );
 
-      return dedupeProductsById((resolvedValue || []).map(normalizeProduct));
+      writeStoredProducts(normalizedProducts);
+      return normalizedProducts;
     });
   };
 
@@ -173,6 +177,7 @@ export function ProductProvider({ children }) {
             : [];
 
         const loadedProducts = dedupeProductsById(rawProducts.map(normalizeProduct));
+        const cachedProducts = dedupeProductsById(readStoredProducts().map(normalizeProduct));
 
         if (!isMounted) {
           return;
@@ -181,33 +186,21 @@ export function ProductProvider({ children }) {
         const catalogProducts = dedupeProductsById(defaultCatalog.map(normalizeProduct));
         const mergedProducts = dedupeProductsById([
           ...loadedProducts,
+          ...cachedProducts,
           ...catalogProducts,
         ]);
 
         setProductsState(mergedProducts);
-
-        // Persist merged catalog+db products without deleting existing rows.
-        try {
-          await axios.put(
-            MERGE_URL,
-            { products: mergedProducts },
-            {
-              ...getAuthConfig(),
-              headers: {
-                ...getAuthConfig().headers,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-        } catch (mergeError) {
-          console.warn("Could not merge products to backend:", mergeError);
-        }
+        writeStoredProducts(mergedProducts);
       } catch {
         if (isMounted) {
-          const seededProducts = dedupeProductsById(
-            defaultCatalog.map(normalizeProduct)
-          );
+          const cachedProducts = dedupeProductsById(readStoredProducts().map(normalizeProduct));
+          const seededProducts = dedupeProductsById([
+            ...cachedProducts,
+            ...defaultCatalog.map(normalizeProduct),
+          ]);
           setProductsState(seededProducts);
+          writeStoredProducts(seededProducts);
         }
       } finally {
         if (isMounted) {

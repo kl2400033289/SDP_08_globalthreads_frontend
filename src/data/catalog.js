@@ -4,7 +4,6 @@ export const defaultCatalog = [
     name: "Radhika Handloom Royal Blue Collar-Neckline Suit Set",
     title: "Radhika Handloom Royal Blue Collar-Neckline Suit Set",
     price: 4000,
-    costPrice: 2000,
     category: "women",
     image:
       "https://www.bullionknot.com/cdn/shop/files/Narthaki_min_1.jpg?v=1746262801&width=1200",
@@ -24,7 +23,6 @@ export const defaultCatalog = [
     name: "Ridhima Handloom Midi Dress in Magenta with Jacket",
     title: "Ridhima Handloom Midi Dress in Magenta with Jacket",
     price: 2000,
-    costPrice: 1000,
     category: "women",
     image:
       "https://www.bullionknot.com/cdn/shop/files/DSC03105.jpg?v=1758892118&width=800",
@@ -44,7 +42,6 @@ export const defaultCatalog = [
     name: "Latte- Handloom Weaved Shirt for Men",
     title: "Latte- Handloom Weaved Shirt for Men",
     price: 1999,
-    costPrice: 999,
     category: "men",
     image:
       "https://rareweave.com/cdn/shop/files/Latte-_Handloom_Weaved_Shirt_for_Men_4.jpg?v=1716108549",
@@ -65,7 +62,6 @@ export const defaultCatalog = [
     name: "Indigofera- Hand Block Daabu Print Shirt for Men",
     title: "Indigofera- Hand Block Daabu Print Shirt for Men",
     price: 2499,
-    costPrice: 1249,
     category: "men",
     image:
       "https://rareweave.com/cdn/shop/files/Indigofera-_Hand_Block_Daabu_Print_Shirt_for_Men_3.jpg?v=1716292302&width=713",
@@ -86,7 +82,6 @@ export const defaultCatalog = [
     name: "Bloom- Semi-Transparent Georgette Jacquard Shirt for Men",
     title: "Bloom- Semi-Transparent Georgette Jacquard Shirt for Men",
     price: 2499,
-    costPrice: 1249,
     category: "men",
     image:
       "https://rareweave.com/cdn/shop/files/Bloom-_Semi-Transparent_Georgette_Jacquard_Shirt_for_Men_3.jpg?v=1716291080&width=713",
@@ -107,7 +102,6 @@ export const defaultCatalog = [
     name: "Spectrum- Men's Embroidered Shirt in Kantha Work",
     title: "Spectrum- Men's Embroidered Shirt in Kantha Work",
     price: 1999,
-    costPrice: 999,
     category: "men",
     image:
       "https://rareweave.com/cdn/shop/files/Spectrum-_Men_s_Embroidered_Shirt_in_Kantha_Work_4.jpg?v=1715867460&width=713",
@@ -128,7 +122,6 @@ export const defaultCatalog = [
     name: "Bunaai Handloom Green Anarkali Peacock Handwork Suit Set",
     title: "Bunaai Handloom Green Anarkali Peacock Handwork Suit Set",
     price: 5000,
-    costPrice: 2500,
     category: "women",
     image:
       "https://www.bullionknot.com/cdn/shop/files/Bunaai_1.jpg?v=1746254296&width=800",
@@ -149,7 +142,6 @@ export const defaultCatalog = [
     name: "Malini Handloom Black Collar-Neckline Suit Set",
     title: "Malini Handloom Black Collar-Neckline Suit Set",
     price: 3000,
-    costPrice: 1500,
     category: "women",
     image:
       "https://www.bullionknot.com/cdn/shop/files/Malini-01.jpg?v=1753955016&width=800",

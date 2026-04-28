@@ -1,6 +1,7 @@
 import "./Login.css";   // reuse SAME CSS
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
 import { useLanguage } from "../context/LanguageContext";
 import { registerUser } from "../api";
 import {
@@ -15,6 +16,10 @@ import {
 function Signup() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -85,8 +90,45 @@ function Signup() {
     }));
   };
 
+  const sendOtp = async () => {
+    try {
+      await axios.post("http://localhost:8080/auth/signup/send-otp", {
+        email,
+      });
+
+      alert("OTP sent!");
+      setOtpSent(true);
+      setOtpVerified(false);
+    } catch (error) {
+      alert("Error sending OTP");
+    }
+  };
+
+  const verifyOtp = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8080/auth/signup/verify-otp",
+        { email, otp }
+      );
+
+      if (response.data === true || response.data === "true") {
+        alert("OTP verified!");
+        setOtpVerified(true);
+      } else {
+        alert("Invalid OTP");
+      }
+    } catch (error) {
+      alert("Verification failed");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!otpVerified) {
+      alert("Verify email first!");
+      return;
+    }
 
     // Validate username
     const usernameValidation = validateUsername(form.username);
@@ -125,21 +167,10 @@ function Signup() {
       return;
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
-    const normalizedEmail = form.email.trim().toLowerCase();
-    const duplicateEmail = storedUsers.some(
-      (entry) => entry.email && entry.email.trim().toLowerCase() === normalizedEmail
-    );
-
-    if (duplicateEmail) {
-      setMessage({
-        text: "This email is already registered with a role. Please use the same email to log in instead of creating another account.",
-        type: "error",
-      });
-      return;
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
     try {
+      const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
       const responseText = await registerUser({
         username: form.username.trim(),
         email: normalizedEmail,
@@ -199,8 +230,14 @@ function Signup() {
             type="email"
             name="email"
             placeholder={t("signup.enterEmail")}
-            value={form.email}
-            onChange={handleChange}
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setForm({ ...form, email: e.target.value });
+              setOtpSent(false);
+              setOtpVerified(false);
+              setOtp("");
+            }}
             onBlur={handleBlur}
             required
           />
@@ -208,112 +245,147 @@ function Signup() {
             <p className="error-text field-error">{fieldErrors.email}</p>
           )}
 
-          <label htmlFor="signup-phone">Phone Number (10 digits)</label>
-          <input
-            id="signup-phone"
-            type="tel"
-            name="phone"
-            placeholder="1234567890"
-            value={form.phone}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            required
-          />
-          {touched.phone && fieldErrors.phone && (
-            <p className="error-text field-error">{fieldErrors.phone}</p>
-          )}
-
-          <label htmlFor="signup-role">{t("signup.role")}</label>
-          <select
-            id="signup-role"
-            name="role"
-            value={form.role}
-            onChange={handleChange}
-          >
-            <option value="buyer">{t("signup.buyer")}</option>
-            <option value="artisan">{t("signup.artisan")}</option>
-            <option value="marketing">{t("signup.marketing")}</option>
-            <option value="admin">{t("signup.admin")}</option>
-          </select>
-
-          <label htmlFor="signup-password">{t("signup.password")}</label>
-          <div className="password-row">
-            <input
-              id="signup-password"
-              type={showPassword ? "text" : "password"}
-              name="password"
-              placeholder={t("signup.createPassword")}
-              value={form.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              required
-            />
-            <button
-              type="button"
-              className="toggle-btn"
-              onClick={() => setShowPassword((prev) => !prev)}
-            >
-              {showPassword ? t("login.hide") : t("login.show")}
-            </button>
-          </div>
-          {touched.password && fieldErrors.password && (
-            <p className="error-text field-error">{fieldErrors.password}</p>
-          )}
-          {passwordStrength && (
-            <p
-              className={`password-strength ${passwordStrength.toLowerCase()}`}
-            >
-              Password strength: {passwordStrength}
-            </p>
-          )}
-          <div className="password-rules">
-            <p>Use a password with:</p>
-            <p>At least 8 characters and no more than 128 characters.</p>
-            <p>At least one uppercase and one lowercase letter.</p>
-            <p>At least one numeral and no spaces.</p>
-            <p>
-              Add at least one special character for Strong:
-              {` ${SIGNUP_PASSWORD_SPECIAL_CHARACTERS}`}
-            </p>
-          </div>
-
-          <label htmlFor="signup-confirm-password">{t("signup.confirmPassword")}</label>
-          <input
-            id="signup-confirm-password"
-            type={showPassword ? "text" : "password"}
-            placeholder={t("signup.confirmPasswordPlaceholder")}
-            value={confirmPassword}
-            onChange={(e) => {
-              setMessage({ text: "", type: "" });
-              setConfirmPassword(e.target.value);
-            }}
-            required
-          />
-
-          {message.text && (
-            <p
-              className={`auth-message ${
-                message.type === "success" ? "success-text" : "error-text"
-              }`}
-            >
-              {message.text}
-            </p>
-          )}
-
-          <button 
-            type="submit" 
+          <button
+            type="button"
             className="primary-btn auth-submit"
-            disabled={
-              fieldErrors.username || 
-              fieldErrors.email || 
-              fieldErrors.password || 
-              fieldErrors.phone ||
-              !confirmPassword ||
-              form.password !== confirmPassword
-            }
+            onClick={sendOtp}
+            disabled={!email.trim()}
           >
-            {t("signup.submit")}
+            Send OTP
           </button>
+
+          {otpSent && !otpVerified && (
+            <>
+              <label htmlFor="signup-otp">Enter OTP</label>
+              <input
+                id="signup-otp"
+                type="text"
+                placeholder="Enter OTP"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+              />
+
+              <button
+                type="button"
+                className="primary-btn auth-submit"
+                onClick={verifyOtp}
+                disabled={!otp.trim()}
+              >
+                Verify OTP
+              </button>
+            </>
+          )}
+
+          {otpVerified && (
+            <>
+              <label htmlFor="signup-phone">Phone Number (10 digits)</label>
+              <input
+                id="signup-phone"
+                type="tel"
+                name="phone"
+                placeholder="1234567890"
+                value={form.phone}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                required
+              />
+              {touched.phone && fieldErrors.phone && (
+                <p className="error-text field-error">{fieldErrors.phone}</p>
+              )}
+
+              <label htmlFor="signup-role">{t("signup.role")}</label>
+              <select
+                id="signup-role"
+                name="role"
+                value={form.role}
+                onChange={handleChange}
+              >
+                <option value="buyer">{t("signup.buyer")}</option>
+                <option value="artisan">{t("signup.artisan")}</option>
+                <option value="marketing">{t("signup.marketing")}</option>
+                <option value="admin">{t("signup.admin")}</option>
+              </select>
+
+              <label htmlFor="signup-password">{t("signup.password")}</label>
+              <div className="password-row">
+                <input
+                  id="signup-password"
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder={t("signup.createPassword")}
+                  value={form.password}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-btn"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                >
+                  {showPassword ? t("login.hide") : t("login.show")}
+                </button>
+              </div>
+              {touched.password && fieldErrors.password && (
+                <p className="error-text field-error">{fieldErrors.password}</p>
+              )}
+              {passwordStrength && (
+                <p
+                  className={`password-strength ${passwordStrength.toLowerCase()}`}
+                >
+                  Password strength: {passwordStrength}
+                </p>
+              )}
+              <div className="password-rules">
+                <p>Use a password with:</p>
+                <p>At least 8 characters and no more than 128 characters.</p>
+                <p>At least one uppercase and one lowercase letter.</p>
+                <p>At least one numeral and no spaces.</p>
+                <p>
+                  Add at least one special character for Strong:
+                  {` ${SIGNUP_PASSWORD_SPECIAL_CHARACTERS}`}
+                </p>
+              </div>
+
+              <label htmlFor="signup-confirm-password">{t("signup.confirmPassword")}</label>
+              <input
+                id="signup-confirm-password"
+                type={showPassword ? "text" : "password"}
+                placeholder={t("signup.confirmPasswordPlaceholder")}
+                value={confirmPassword}
+                onChange={(e) => {
+                  setMessage({ text: "", type: "" });
+                  setConfirmPassword(e.target.value);
+                }}
+                required
+              />
+
+              {message.text && (
+                <p
+                  className={`auth-message ${
+                    message.type === "success" ? "success-text" : "error-text"
+                  }`}
+                >
+                  {message.text}
+                </p>
+              )}
+
+              <button 
+                type="submit" 
+                className="primary-btn auth-submit"
+                disabled={
+                  fieldErrors.username || 
+                  fieldErrors.email || 
+                  fieldErrors.password || 
+                  fieldErrors.phone ||
+                  !confirmPassword ||
+                  form.password !== confirmPassword
+                }
+              >
+                {t("signup.submit")}
+              </button>
+            </>
+          )}
         </form>
 
         <p className="switch-auth-text">

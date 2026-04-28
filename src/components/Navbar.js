@@ -17,7 +17,11 @@ function Navbar() {
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const wishlistCount = wishlist.length;
-  const dashboardPath = user ? `/${user.role}` : "/login";
+  const dashboardPath = user
+    ? user.role === "admin"
+      ? "/admin/dashboard"
+      : `/${user.role}`
+    : "/login";
 
   return (
     <nav className="navbar">

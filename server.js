@@ -28,6 +28,7 @@ const ensureSchema = async () => {
       id BIGINT PRIMARY KEY,
       sort_order INT NOT NULL DEFAULT 0,
       name VARCHAR(255) NOT NULL,
+        category VARCHAR(50) NOT NULL DEFAULT 'general',
       price DECIMAL(12,2) NOT NULL DEFAULT 0,
       cost_price DECIMAL(12,2) NULL,
       stock INT NOT NULL DEFAULT 0,
@@ -45,6 +46,23 @@ const ensureSchema = async () => {
       INDEX idx_products_sort_order (sort_order)
     )
   `);
+
+    // Backward compatibility for existing databases created before category support.
+    const [categoryColumnRows] = await pool.query(
+      `
+        SELECT COUNT(*) AS count
+        FROM information_schema.columns
+        WHERE table_schema = DATABASE()
+          AND table_name = 'products'
+          AND column_name = 'category'
+      `
+    );
+
+    if ((categoryColumnRows?.[0]?.count || 0) === 0) {
+      await pool.query(
+        "ALTER TABLE products ADD COLUMN category VARCHAR(50) NOT NULL DEFAULT 'general'"
+      );
+    }
 };
 
 const parseJson = (value, fallback) => {
@@ -69,6 +87,7 @@ const normalizeProduct = (product = {}, sortOrder = 0) => {
     id: Number(product.id) || Date.now() + sortOrder,
     sortOrder,
     name: product.name || "",
+      category: String(product.category || "general").toLowerCase(),
     price: Number(product.price) || 0,
     costPrice:
       product.costPrice === "" || product.costPrice == null
@@ -93,6 +112,7 @@ const normalizeProduct = (product = {}, sortOrder = 0) => {
 const mapRowToProduct = (row) => ({
   id: Number(row.id),
   name: row.name,
+    category: String(row.category || "general").toLowerCase(),
   price: Number(row.price) || 0,
   costPrice: row.cost_price == null ? null : Number(row.cost_price),
   stock: Number(row.stock) || 0,
@@ -139,6 +159,7 @@ app.put("/api/products/sync", async (req, res) => {
             id,
             sort_order,
             name,
+            category,
             price,
             cost_price,
             stock,
@@ -151,12 +172,13 @@ app.put("/api/products/sync", async (req, res) => {
             sizes_json,
             product_story,
             description
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           product.id,
           product.sortOrder,
           product.name,
+          product.category,
           product.price,
           product.costPrice,
           product.stock,
@@ -188,6 +210,132 @@ app.put("/api/products/sync", async (req, res) => {
     res.status(500).json({ message: "Failed to sync products." });
   } finally {
     connection.release();
+  }
+});
+
+// Create a new product
+app.post("/api/products", async (req, res) => {
+  try {
+    const product = normalizeProduct(req.body, 0);
+
+    if (!product.name) {
+      return res.status(400).json({ message: "Product name is required." });
+    }
+
+    await pool.query(
+      `
+        INSERT INTO products (
+          id,
+          sort_order,
+          name,
+          category,
+          price,
+          cost_price,
+          stock,
+          design_notes,
+          image_data,
+          image_hash,
+          rating,
+          reviews_json,
+          artisan,
+          sizes_json,
+          product_story,
+          description
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        product.id,
+        product.sortOrder,
+        product.name,
+        product.category,
+        product.price,
+        product.costPrice,
+        product.stock,
+        product.designNotes,
+        product.imageData,
+        product.imageHash,
+        product.rating,
+        JSON.stringify(product.reviews),
+        product.artisan,
+        JSON.stringify(product.sizes),
+        product.productStory,
+        product.description,
+      ]
+    );
+
+    res.status(201).json({
+      success: true,
+      product,
+      message: "Product created successfully.",
+    });
+  } catch (error) {
+    console.error("Error creating product:", error);
+    res.status(500).json({ message: "Failed to create product." });
+  }
+});
+
+// Update an existing product
+app.put("/api/products/:id", async (req, res) => {
+  try {
+    const productId = Number(req.params.id);
+
+    if (!productId) {
+      return res.status(400).json({ message: "Invalid product id." });
+    }
+
+    const product = normalizeProduct(req.body, 0);
+    product.id = productId;
+
+    if (!product.name) {
+      return res.status(400).json({ message: "Product name is required." });
+    }
+
+    await pool.query(
+      `
+        UPDATE products SET
+          name = ?,
+          category = ?,
+          price = ?,
+          cost_price = ?,
+          stock = ?,
+          design_notes = ?,
+          image_data = ?,
+          image_hash = ?,
+          rating = ?,
+          reviews_json = ?,
+          artisan = ?,
+          sizes_json = ?,
+          product_story = ?,
+          description = ?
+        WHERE id = ?
+      `,
+      [
+        product.name,
+        product.category,
+        product.price,
+        product.costPrice,
+        product.stock,
+        product.designNotes,
+        product.imageData,
+        product.imageHash,
+        product.rating,
+        JSON.stringify(product.reviews),
+        product.artisan,
+        JSON.stringify(product.sizes),
+        product.productStory,
+        product.description,
+        productId,
+      ]
+    );
+
+    res.json({
+      success: true,
+      product,
+      message: "Product updated successfully.",
+    });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    res.status(500).json({ message: "Failed to update product." });
   }
 });
 

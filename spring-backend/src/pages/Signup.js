@@ -7,7 +7,9 @@ function Signup() {
 
   const [form, setForm] = useState({
     username: "",
+    email: "",
     password: "",
+    phone: "",
     role: "buyer",
   });
 
@@ -23,15 +25,26 @@ function Signup() {
     // get existing users
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
-    // check if already exists
-    const exists = users.find((u) => u.username === form.username);
-    if (exists) {
-      setMessage("User already exists!");
+    const normalizedEmail = form.email.trim().toLowerCase();
+
+    const emailExists = users.find(
+      (u) => u.email && u.email.trim().toLowerCase() === normalizedEmail
+    );
+
+    if (emailExists) {
+      setMessage("This email is already registered. Use the same email to login.");
       return;
     }
 
     // save user
-    users.push(form);
+    users.push({
+      id: Date.now(),
+      username: form.username.trim(),
+      email: normalizedEmail,
+      password: form.password,
+      phone: form.phone.trim(),
+      role: form.role,
+    });
     localStorage.setItem("users", JSON.stringify(users));
 
     setMessage("Account created successfully!");
@@ -57,6 +70,24 @@ function Signup() {
         />
 
         <input
+          type="email"
+          name="email"
+          placeholder="Enter Email"
+          value={form.email}
+          onChange={handleChange}
+          required
+        />
+
+        <input
+          type="tel"
+          name="phone"
+          placeholder="10 digit phone number"
+          value={form.phone}
+          onChange={handleChange}
+          required
+        />
+
+        <input
           type="password"
           name="password"
           placeholder="Choose Password"
@@ -70,6 +101,7 @@ function Signup() {
           <option value="buyer">Buyer</option>
           <option value="artisan">Artisan</option>
           <option value="marketing">Marketing</option>
+          <option value="admin">Admin</option>
         </select>
 
         {message && <p className="error-text">{message}</p>}

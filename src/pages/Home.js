@@ -4,6 +4,7 @@ import { useContext, useMemo, useState, useEffect, useRef } from "react";
 import { ProductContext } from "../context/ProductContext";
 import { useLanguage } from "../context/LanguageContext";
 import ancientMusic from "../assets/harumachimusic-ancient-wind-112528.mp3";
+import projectLogo from "../assets/global_threads logo.png";
 
 let hasShownWelcomeThisRuntime = false;
 
@@ -14,6 +15,22 @@ function Home() {
   const [showWelcome, setShowWelcome] = useState(false);
   const audioRef = useRef(null);
 
+  const tryStartWelcomeMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) return Promise.resolve();
+
+    // Autoplay with muted first, then unmute once playback starts.
+    audio.muted = true;
+    audio.volume = 0.5;
+    return audio.play().then(() => {
+      window.setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.muted = false;
+        }
+      }, 120);
+    });
+  };
+
   useEffect(() => {
     if (!hasShownWelcomeThisRuntime) {
       setShowWelcome(true);
@@ -23,9 +40,20 @@ function Home() {
 
   useEffect(() => {
     if (showWelcome && audioRef.current) {
-      // Attempt to play audio
-      audioRef.current.play().catch((err) => {
-        console.log("Audio autoplay blocked by browser:", err);
+      // Try autoplay first; if blocked, start it on the first user gesture.
+      tryStartWelcomeMusic().catch(() => {
+        const startOnFirstInteraction = () => {
+          tryStartWelcomeMusic().catch(() => {});
+          window.removeEventListener("pointerdown", startOnFirstInteraction);
+          window.removeEventListener("keydown", startOnFirstInteraction);
+        };
+
+        window.addEventListener("pointerdown", startOnFirstInteraction, {
+          once: true,
+        });
+        window.addEventListener("keydown", startOnFirstInteraction, {
+          once: true,
+        });
       });
     }
   }, [showWelcome]);
@@ -68,7 +96,18 @@ function Home() {
   if (showWelcome) {
     return (
       <div className="home-page welcome-overlay">
-        <audio ref={audioRef} loop volume="0.5">
+        <audio
+          ref={audioRef}
+          loop
+          autoPlay
+          playsInline
+          preload="auto"
+          onCanPlay={() => {
+            if (showWelcome && audioRef.current?.paused) {
+              tryStartWelcomeMusic().catch(() => {});
+            }
+          }}
+        >
           <source src={ancientMusic} type="audio/mpeg" />
         </audio>
 
@@ -90,7 +129,14 @@ function Home() {
           <div className="envelope-wrapper">
             <div className="envelope">
               <div className="envelope-flap"></div>
-              <div className="envelope-body"></div>
+              <div className="envelope-body">
+                <img
+                  src={projectLogo}
+                  alt="Global Threads"
+                  className="envelope-logo"
+                />
+                <p className="envelope-brand">Global Threads</p>
+              </div>
             </div>
           </div>
 
@@ -115,17 +161,11 @@ function Home() {
             onClick={(e) => {
               e.stopPropagation();
               if (audioRef.current) {
-                console.log("Audio paused:", audioRef.current.paused);
                 if (audioRef.current.paused) {
                   audioRef.current.volume = 0.5;
-                  audioRef.current.play().then(() => {
-                    console.log("Audio playing");
-                  }).catch((err) => {
-                    console.log("Play failed:", err);
-                  });
+                  audioRef.current.play().catch(() => {});
                 } else {
                   audioRef.current.pause();
-                  console.log("Audio paused");
                 }
               }
             }}

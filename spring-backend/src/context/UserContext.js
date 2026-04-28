@@ -8,10 +8,24 @@ const defaultUsers = [
   { id: 3, username: "artisan", role: "artisan", blocked: false },
 ];
 
+const mergeUsers = (savedUsers) => {
+  const combined = [...defaultUsers, ...(savedUsers || [])];
+  const seen = new Set();
+
+  return combined.filter((user) => {
+    const key = user.email ? user.email.trim().toLowerCase() : `${user.role}:${user.username}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
 export function UserProvider({ children }) {
   const [users, setUsers] = useState(() => {
     const saved = localStorage.getItem("users");
-    return saved ? JSON.parse(saved) : defaultUsers;
+    return mergeUsers(saved ? JSON.parse(saved) : []);
   });
 
   useEffect(() => {

@@ -48,7 +48,6 @@ function ArtisanDashboard() {
     const customers = new Set();
     let soldUnits = 0;
     let revenue = 0;
-    let cost = 0;
 
     orders.forEach((order) => {
       let purchasedFromArtisan = false;
@@ -60,15 +59,10 @@ function ArtisanDashboard() {
 
         const qty = Number(item.qty) || 1;
         const lineRevenue = (Number(item.price) || 0) * qty;
-        const sourceProduct = artisanProducts.find(
-          (product) => product.id === item.id
-        );
-        const unitCost = Number(sourceProduct?.costPrice) || 0;
 
         soldByProduct[item.id] = (soldByProduct[item.id] || 0) + qty;
         soldUnits += qty;
         revenue += lineRevenue;
-        cost += unitCost * qty;
         purchasedFromArtisan = true;
       });
 
@@ -82,7 +76,7 @@ function ArtisanDashboard() {
       soldUnits,
       revenue,
       customersCount: customers.size,
-      profitLoss: revenue - cost,
+      profitLoss: revenue,
     };
   }, [orders, artisanProducts]);
 
@@ -303,7 +297,7 @@ function ArtisanDashboard() {
               required
             />
 
-            <label htmlFor="price">{t("productPrice", "Product Cost")}</label>
+            <label htmlFor="price">{t("productPrice", "Price")}</label>
             <input
               id="price"
               name="price"
@@ -409,7 +403,7 @@ function ArtisanDashboard() {
                   <div className="artisan-product-info">
                     <h3>{t(`products.${product.name}`, product.name)}</h3>
                     <p>
-                      {t("productPrice", "Product Cost")} : {formatMoney(product.price)}
+                      {t("productPrice", "Price")} : {formatMoney(product.price)}
                     </p>
                     <p>
                       {t("productStock", "Stock")} : {Number(product.stock) || 0}

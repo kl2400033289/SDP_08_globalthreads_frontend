@@ -1,0 +1,34 @@
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.admin-main-content {
+  flex: 1;
+  padding: 30px;
+  background-color: #f5f6fa;
+  overflow-y: auto;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+    margin-top: 60px;
+    min-height: auto;
+  }
+
+  .admin-main-content {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-layout {
+    margin-top: 50px;
+  }
+
+  .admin-main-content {
+    padding: 15px;
+  }
+}

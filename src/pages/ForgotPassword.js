@@ -6,6 +6,10 @@ import {
   sendForgotPasswordOtp,
   verifyForgotPasswordOtp,
 } from "../api";
+import {
+  getSignupPasswordStrength,
+  validateSignupPassword,
+} from "../utils/validation";
 import "./Login.css"; // reuse same styles
 
 function ForgotPassword() {
@@ -15,11 +19,40 @@ function ForgotPassword() {
   const [step, setStep] = useState(1); // 1: email, 2: OTP, 3: new password
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState({ text: "", type: "" });
   const [strength, setStrength] = useState("");
+
+  const getStoredUsers = () => {
+    try {
+      return JSON.parse(localStorage.getItem("users")) || [];
+    } catch {
+      return [];
+    }
+  };
+
+  const updateStoredUserPassword = (targetEmail, nextPassword) => {
+    const users = getStoredUsers();
+    let didUpdate = false;
+
+    const updatedUsers = users.map((user) => {
+      const userEmail = user.email?.trim().toLowerCase();
+
+      if (userEmail === targetEmail) {
+        didUpdate = true;
+        return { ...user, password: nextPassword };
+      }
+
+      return user;
+    });
+
+    if (didUpdate) {
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
+    }
+
+    return didUpdate;
+  };
 
   const setError = (text) => setMessage({ text, type: "error" });
   const setSuccess = (text) => setMessage({ text, type: "success" });
@@ -49,7 +82,6 @@ function ForgotPassword() {
       });
 
       setStep(3);
-      setOldPassword(""); // Reset old password field for step 3
       setNewPassword(""); // Reset new password field
       setConfirmPassword(""); // Reset confirm password field
       setStrength("");
@@ -61,11 +93,13 @@ function ForgotPassword() {
 
   // Password strength check
   const checkStrength = (pwd) => {
-    if (pwd.length < 4) return t("forgot.weak");
-    if (pwd.match(/[a-z]/) && pwd.match(/[0-9]/)) return t("forgot.medium");
-    if (pwd.match(/[a-z]/) && pwd.match(/[0-9]/) && pwd.match(/[!@#$%^&*]/))
-      return t("forgot.strong");
-    return t("forgot.weak");
+    const strength = getSignupPasswordStrength(pwd);
+
+    if (!strength) {
+      return "";
+    }
+
+    return t(`forgot.${strength.toLowerCase()}`) || strength;
   };
 
   const handlePasswordChange = (e) => {
@@ -77,9 +111,10 @@ function ForgotPassword() {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate old password is provided
-    if (!oldPassword.trim()) {
-      setError("Please enter your old password");
+    const passwordValidation = validateSignupPassword(newPassword);
+
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.error);
       return;
     }
 
@@ -89,24 +124,25 @@ function ForgotPassword() {
       return;
     }
 
-    // Validate new password length
-    if (newPassword.length < 6) {
-      setError(t("signup.passwordMin"));
-      return;
-    }
+    const normalizedEmail = email.trim().toLowerCase();
+    const storedUser = getStoredUsers().find(
+      (user) => user.email && user.email.trim().toLowerCase() === normalizedEmail
+    );
 
-    // Validate new password is different from old password
-    if (oldPassword === newPassword) {
-      setError("New password must be different from your old password");
+    // Prevent reusing the current stored password.
+    if (storedUser && storedUser.password === newPassword) {
+      setError("New password must be different from your current password.");
       return;
     }
 
     try {
       const responseText = await resetForgotPassword({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         otp: otp.trim(),
         newPassword,
       });
+
+      updateStoredUserPassword(normalizedEmail, newPassword);
 
       setSuccess(responseText || t("forgot.passwordUpdated"));
       setTimeout(() => {
@@ -169,16 +205,6 @@ function ForgotPassword() {
 
       {step === 3 && (
         <form className="login-form" onSubmit={handlePasswordSubmit}>
-          <input
-            type="password"
-            placeholder="Enter your old password"
-            value={oldPassword}
-            onChange={(e) => {
-              setOldPassword(e.target.value);
-              setMessage({ text: "", type: "" });
-            }}
-            required
-          />
           <input
             type="password"
             placeholder={t("forgot.newPassword")}
