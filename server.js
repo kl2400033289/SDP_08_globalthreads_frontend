@@ -6,10 +6,24 @@ const cors = require("cors");
 const mysql = require("mysql2/promise");
 
 const app = express();
-const port = Number(process.env.BACKEND_PORT) || 5000;
+const port = Number(process.env.PORT || process.env.BACKEND_PORT) || 5000;
+const path = require("path");
 
 app.use(cors());
 app.use(express.json({ limit: "25mb" }));
+
+// Serve React build files
+app.use(express.static(path.join(__dirname, "build")));
+
+// Serve index.html for all non-API routes (SPA fallback)
+app.get(/^(?!\/api\/)/, (req, res) => {
+  const indexPath = path.join(__dirname, "build", "index.html");
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.status(404).json({ message: "Not found" });
+    }
+  });
+});
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
